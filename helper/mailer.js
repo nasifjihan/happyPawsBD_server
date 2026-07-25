@@ -3,6 +3,9 @@ import ejs from "ejs"; // Import EJS for rendering
 import path from "path"; // Import path to resolve the template path
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Get __dirname equivalent for ES6
 const __filename = fileURLToPath(import.meta.url);
@@ -10,16 +13,14 @@ const __dirname = dirname(__filename);
 
 // Create a transporter
 const transporter = nodemailer.createTransport({
-  service: "Gmail", // Or any other SMTP service provider
+  service: process.env.EMAIL_SERVICE || "Gmail",
   auth: {
-    // user: process.env.EMAIL_USER,
-    // pass: process.env.EMAIL_PASS,
-    // user: "nasifzeehan1@gmail.com",
-    user: "hasansajid121998@gmail.com",
-    // pass: "xirikbpviwvvlueu",
-    pass: "msshoypurlgmjwvh",
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
+
+const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
 // Grooming Enrollment Confirmation Email Function
 export const groomingConfirmationEmail = async (
@@ -39,8 +40,7 @@ export const groomingConfirmationEmail = async (
     });
 
     const mailOptions = {
-      // from: "nasifzeehan1@gmail.com",
-      from: "hasansajid121998@gmail.com",
+      from: fromEmail,
       to: userEmail,
       subject: "Grooming Program Confirmation",
       html: htmlContent,
@@ -73,8 +73,7 @@ export const boardingConfirmationEmail = async (
     });
 
     const mailOptions = {
-      // from: "nasifzeehan1@gmail.com",
-      from: "hasansajid121998@gmail.com",
+      from: fromEmail,
       to: userEmail,
       subject: "Boarding Program Confirmation",
       html: htmlContent,
@@ -107,8 +106,7 @@ export const trainingConfirmationEmail = async (
     });
 
     const mailOptions = {
-      // from: "nasifzeehan1@gmail.com",
-      from: "hasansajid121998@gmail.com",
+      from: fromEmail,
       to: userEmail,
       subject: "Training Program Confirmation",
       html: htmlContent,
@@ -147,8 +145,7 @@ export const sendAdoptionConfirmationEmail = async (
     });
 
     const mailOptions = {
-      // from: "nasifzeehan1@gmail.com",
-      from: "hasansajid121998@gmail.com",
+      from: fromEmail,
       to: userEmail,
       subject: "Adoption Application Confirmation",
       html: htmlContent,

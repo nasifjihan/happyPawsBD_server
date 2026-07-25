@@ -1,23 +1,17 @@
+import "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
-import dotenv from "dotenv";
 import cors from "cors";
 
 import Routes from "./server/route.js";
 import Connection from "./database/db.js";
+import { isAllowedOrigin } from "./utils/origin.js";
 
 const app = express();
-dotenv.config();
 
 // app.use(bodyParser.json({ extended: true }));
 app.use(bodyParser.json({ limit: "5mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// Define the allowed origins
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://happypawsbd.onrender.com",
-];
 
 // Configure CORS
 app.use(
@@ -25,7 +19,7 @@ app.use(
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
+      if (!isAllowedOrigin(origin)) {
         const msg =
           "The CORS policy for this site does not allow access from the specified Origin.";
         return callback(new Error(msg), false);
