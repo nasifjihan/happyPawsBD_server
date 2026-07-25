@@ -13,6 +13,7 @@ dist
 dist-ssr
 *.local
 .env
+coverage
 # production
 /build
 
@@ -27,4 +28,3 @@ dist-ssr
 *.sln
 *.sw?
 *.swc
-

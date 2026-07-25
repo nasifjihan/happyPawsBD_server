@@ -5,6 +5,19 @@ import { CloudinaryStorage } from "multer-storage-cloudinary";
 import dotenv from "dotenv";
 dotenv.config();
 
+const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
+const maxUploadSizeInBytes = 5 * 1024 * 1024;
+
+const imageFileFilter = (req, file, callback) => {
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    const error = new Error("Only JPG, JPEG, and PNG images are allowed.");
+    error.statusCode = 400;
+    return callback(error);
+  }
+
+  return callback(null, true);
+};
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -31,7 +44,15 @@ const lostPetsStorage = new CloudinaryStorage({
 });
 
 // Create upload handlers for each folder
-const uploadFoundPets = multer({ storage: foundPetsStorage });
-const uploadLostPets = multer({ storage: lostPetsStorage });
+const uploadFoundPets = multer({
+  storage: foundPetsStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: maxUploadSizeInBytes },
+});
+const uploadLostPets = multer({
+  storage: lostPetsStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: maxUploadSizeInBytes },
+});
 
 export { uploadFoundPets, uploadLostPets };

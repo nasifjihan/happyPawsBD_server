@@ -1,6 +1,5 @@
 import nodemailer from "nodemailer";
-import ejs from "ejs"; // Import EJS for rendering
-import path from "path"; // Import path to resolve the template path
+import ejs from "ejs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import dotenv from "dotenv";
@@ -11,7 +10,6 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Create a transporter
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE || "Gmail",
   auth: {
@@ -22,106 +20,95 @@ const transporter = nodemailer.createTransport({
 
 const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
-// Grooming Enrollment Confirmation Email Function
-export const groomingConfirmationEmail = async (
-  userEmail,
-  userName,
-  address,
-  programId
-) => {
-  try {
-    const templatePath = join(__dirname, "../helper/emailTemplate.ejs");
-    const htmlContent = await ejs.renderFile(templatePath, {
-      programName: "Grooming",
-      userName,
-      userEmail,
-      address,
-      programId,
-    });
-
-    const mailOptions = {
-      from: fromEmail,
-      to: userEmail,
-      subject: "Grooming Program Confirmation",
-      html: htmlContent,
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log("Sending email to:", userEmail);
-
-    console.log("Email sent successfully");
-  } catch (error) {
-    console.error("Error sending email:", error.message);
+const ensureMailerConfig = () => {
+  if (!process.env.EMAIL_USER || !fromEmail || !process.env.EMAIL_PASS) {
+    throw new Error(
+      "Email configuration is incomplete. Set EMAIL_USER, EMAIL_PASS, and optionally EMAIL_FROM."
+    );
   }
 };
 
-// Boarding Enrollment Confirmation Email Function
-export const boardingConfirmationEmail = async (
-  userEmail,
-  userName,
-  address,
-  programId
-) => {
-  try {
-    const templatePath = join(__dirname, "../helper/emailTemplate.ejs");
-    const htmlContent = await ejs.renderFile(templatePath, {
-      programName: "Boarding",
-      userName,
-      userEmail,
-      address,
-      programId,
-    });
+const sendTemplatedEmail = async ({
+  to,
+  subject,
+  templateFile,
+  templateData,
+}) => {
+  ensureMailerConfig();
 
-    const mailOptions = {
-      from: fromEmail,
-      to: userEmail,
-      subject: "Boarding Program Confirmation",
-      html: htmlContent,
-    };
+  const templatePath = join(__dirname, "../helper", templateFile);
+  const htmlContent = await ejs.renderFile(templatePath, templateData);
 
-    await transporter.sendMail(mailOptions);
-    console.log("Sending email to:", userEmail);
+  await transporter.sendMail({
+    from: fromEmail,
+    to,
+    subject,
+    html: htmlContent,
+  });
 
-    console.log("Email sent successfully");
-  } catch (error) {
-    console.error("Error sending email:", error.message);
-  }
+  console.log("Email sent successfully to:", to);
 };
 
-// Boarding Enrollment Confirmation Email Function
 export const trainingConfirmationEmail = async (
   userEmail,
   userName,
   address,
   programId
 ) => {
-  try {
-    const templatePath = join(__dirname, "../helper/emailTemplate.ejs");
-    const htmlContent = await ejs.renderFile(templatePath, {
+  await sendTemplatedEmail({
+    to: userEmail,
+    subject: "Training Program Confirmation",
+    templateFile: "emailTemplate.ejs",
+    templateData: {
       programName: "Training",
       userName,
       userEmail,
       address,
       programId,
-    });
-
-    const mailOptions = {
-      from: fromEmail,
-      to: userEmail,
-      subject: "Training Program Confirmation",
-      html: htmlContent,
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log("Sending email to:", userEmail);
-
-    console.log("Email sent successfully");
-  } catch (error) {
-    console.error("Error sending email:", error.message);
-  }
+    },
+  });
 };
 
-// Adoption Request Confirmation Email Function
+export const groomingConfirmationEmail = async (
+  userEmail,
+  userName,
+  address,
+  programId
+) => {
+  await sendTemplatedEmail({
+    to: userEmail,
+    subject: "Grooming Program Confirmation",
+    templateFile: "emailTemplate.ejs",
+    templateData: {
+      programName: "Grooming",
+      userName,
+      userEmail,
+      address,
+      programId,
+    },
+  });
+};
+
+export const boardingConfirmationEmail = async (
+  userEmail,
+  userName,
+  address,
+  programId
+) => {
+  await sendTemplatedEmail({
+    to: userEmail,
+    subject: "Boarding Program Confirmation",
+    templateFile: "emailTemplate.ejs",
+    templateData: {
+      programName: "Boarding",
+      userName,
+      userEmail,
+      address,
+      programId,
+    },
+  });
+};
+
 export const sendAdoptionConfirmationEmail = async (
   userEmail,
   adopterName,
@@ -132,9 +119,11 @@ export const sendAdoptionConfirmationEmail = async (
   animalCode,
   animalType
 ) => {
-  try {
-    const templatePath = join(__dirname, "../helper/adoptionTemplate.ejs");
-    const htmlContent = await ejs.renderFile(templatePath, {
+  await sendTemplatedEmail({
+    to: userEmail,
+    subject: "Adoption Application Confirmation",
+    templateFile: "adoptionTemplate.ejs",
+    templateData: {
       adopterName,
       contactEmail,
       contactPhone,
@@ -142,19 +131,6 @@ export const sendAdoptionConfirmationEmail = async (
       experience,
       animalCode,
       animalType,
-    });
-
-    const mailOptions = {
-      from: fromEmail,
-      to: userEmail,
-      subject: "Adoption Application Confirmation",
-      html: htmlContent,
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log("Sending email to:", userEmail);
-    console.log("Email sent successfully");
-  } catch (error) {
-    console.error("Error sending email:", error.message);
-  }
+    },
+  });
 };

@@ -1,16 +1,15 @@
 import mongoose from "mongoose";
+import { env } from "../config/env.js";
 
-const Connection = async (username, password) => {
-  const URL = `mongodb+srv://${username}:${password}@cluster0.adcng.mongodb.net/happyPawsBD?retryWrites=true&w=majority`;
-
+const Connection = async () => {
   try {
-    await mongoose.connect(URL, {
-      useUnifiedTopology: true,
-      useNewUrlParser: true,
+    await mongoose.connect(env.mongoUri, {
+      serverSelectionTimeoutMS: 10000,
     });
-    console.log("Database Connected Succesfully");
+    console.log("Database connected successfully");
   } catch (error) {
-    console.log("Database Connection Error: ", error.message);
+    console.error("Database connection error:", error.message);
+    throw error;
   }
 };
 
