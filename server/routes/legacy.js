@@ -14,6 +14,7 @@ import {
 } from "../../modules/enrollments/enrollment.controller.js";
 import { createOrder } from "../../modules/orders/order.controller.js";
 import { createPayment } from "../../modules/payments/payment.controller.js";
+import { addVolunteerApplication } from "../../modules/volunteers/volunteer.controller.js";
 import { uploadFoundPets, uploadLostPets } from "../../utils/cloudnary.js";
 
 const router = express.Router();
@@ -36,6 +37,7 @@ router.post("/adoption/adoptable_pets/:code", addAdoptionApplication);
 router.post("/training/:id", addTrainingEnrollment);
 router.post("/petcare/grooming/:id", addGroomingEnrollment);
 router.post("/petcare/boarding/:id", addBoardingEnrollment);
+router.post("/volunteer/applications", addVolunteerApplication);
 router.post("/cart/orders", createOrder);
 router.post("/cart/orders/create-payment", createPayment);
 

@@ -21,6 +21,13 @@ const optionalEmailField = {
   lowercase: true,
 };
 
+const requiredEmailField = {
+  type: String,
+  required: true,
+  trim: true,
+  lowercase: true,
+};
+
 // lostPet Form Data Schema
 const lostPetSchema = mongoose.Schema(
   {
@@ -111,6 +118,28 @@ const boardingSchema = mongoose.Schema(
   schemaOptions
 );
 
+// Volunteer Application Form Data Schema
+const volunteerApplicationSchema = mongoose.Schema(
+  {
+    fullName: requiredTrimmedString,
+    contactEmail: requiredEmailField,
+    contactPhone: requiredTrimmedString,
+    city: requiredTrimmedString,
+    preferredRole: requiredTrimmedString,
+    availability: requiredTrimmedString,
+    experience: optionalTrimmedString,
+    motivation: requiredTrimmedString,
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "contacted", "closed"],
+      default: "new",
+      index: true,
+    },
+  },
+  schemaOptions
+);
+
 const OrderSchema = mongoose.Schema(
   {
     deliveryInfo: {
@@ -190,5 +219,9 @@ export const GroomingEnrollment = mongoose.model(
 export const BoardingEnrollment = mongoose.model(
   "BoardingEnrollment",
   boardingSchema
+);
+export const VolunteerApplication = mongoose.model(
+  "VolunteerApplication",
+  volunteerApplicationSchema
 );
 export const Orders = mongoose.model("Order", OrderSchema);
