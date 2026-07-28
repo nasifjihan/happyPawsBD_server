@@ -3,6 +3,7 @@ import http from "http";
 import app from "./app.js";
 import Connection from "./database/db.js";
 import { ensureStartupConfig, env } from "./config/env.js";
+import { ensureSeedAdminCredential } from "./modules/admin/admin.service.js";
 
 globalThis.__HPBD_DATABASE_READY__ = false;
 
@@ -11,6 +12,7 @@ const startServer = async () => {
 
   await Connection();
   globalThis.__HPBD_DATABASE_READY__ = true;
+  await ensureSeedAdminCredential();
 
   const server = http.createServer(app);
 

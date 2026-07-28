@@ -47,6 +47,26 @@ test("validateOrderPayload accepts current frontend checkout shape", () => {
   assert.equal(result.orderSummary.total, 500);
 });
 
+test("validateOrderPayload rejects mismatched totals", () => {
+  assert.throws(
+    () =>
+      validateOrderPayload({
+        deliveryInfo: {
+          name: "Nasif",
+          email: "test@example.com",
+          phone: "01700000000",
+          address: "Banani",
+        },
+        orderSummary: {
+          items: [{ id: "P001", name: "Cat Food", price: 250, quantity: 2 }],
+          total: 10,
+        },
+        paymentMethod: "cash_on_delivery",
+      }),
+    /Order total does not match/
+  );
+});
+
 test("validatePaymentPayload rejects unsupported payment methods", () => {
   assert.throws(
     () =>

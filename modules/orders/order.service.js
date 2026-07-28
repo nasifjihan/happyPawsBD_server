@@ -6,9 +6,14 @@ export const createOrderRecord = async (payload) => {
 };
 
 export const calculateOrderTotal = (items) =>
-  items.reduce(
-    (total, item) => total + Number(item.price || 0) * Number(item.quantity || 0),
-    0
+  Number(
+    items
+      .reduce(
+        (total, item) =>
+          total + Number(item.price || 0) * Number(item.quantity || 0),
+        0
+      )
+      .toFixed(2)
   );
 
 export const updateOrderRecord = async (orderId, updates) =>

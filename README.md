@@ -47,5 +47,6 @@ Recommended events:
 - `app.js` configures middleware and routes
 - `server.js` handles bootstrapping and shutdown
 - `modules/` contains domain-based controllers, services, routes, and validators
-- `server/routes/legacy.js` keeps the old frontend-compatible routes active
+- Catalog/adoption content (shop items + adoptable animals) can be stored in MongoDB. Run `npm run seed:content` to import the starter data from `/data/`.
+- All active API routes are exposed through `server/routes/api-v1.js`
 - `server/routes/api-v1.js` exposes the cleaner versioned API surface

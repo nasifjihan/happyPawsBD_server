@@ -41,9 +41,17 @@ const lostPetSchema = mongoose.Schema(
     lostDate: requiredTrimmedString,
     description: requiredTrimmedString,
     petPicture: requiredTrimmedString,
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "resolved", "closed"],
+      default: "new",
+      index: true,
+    },
   },
   schemaOptions
 );
+lostPetSchema.index({ status: 1, createdAt: -1 });
 
 // foundPet Form Data Schema
 const foundPetSchema = mongoose.Schema(
@@ -59,9 +67,17 @@ const foundPetSchema = mongoose.Schema(
     foundDate: requiredTrimmedString,
     description: requiredTrimmedString,
     petPicture: requiredTrimmedString,
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "resolved", "closed"],
+      default: "new",
+      index: true,
+    },
   },
   schemaOptions
 );
+foundPetSchema.index({ status: 1, createdAt: -1 });
 
 // Adoption Application Form Data Schema
 const adoptionSchema = mongoose.Schema(
@@ -78,9 +94,18 @@ const adoptionSchema = mongoose.Schema(
     contactPhone: requiredTrimmedString,
     address: requiredTrimmedString,
     experience: optionalTrimmedString,
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "contacted", "approved", "rejected", "closed"],
+      default: "new",
+      index: true,
+    },
   },
   schemaOptions
 );
+adoptionSchema.index({ status: 1, createdAt: -1 });
+adoptionSchema.index({ animalCode: 1, createdAt: -1 });
 
 // Training Application Form Data Schema
 const trainingSchema = mongoose.Schema(
@@ -90,9 +115,18 @@ const trainingSchema = mongoose.Schema(
     contactPhone: requiredTrimmedString,
     address: requiredTrimmedString,
     programId: { type: Number, required: true, index: true },
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "contacted", "scheduled", "closed"],
+      default: "new",
+      index: true,
+    },
   },
   schemaOptions
 );
+trainingSchema.index({ status: 1, createdAt: -1 });
+trainingSchema.index({ programId: 1, createdAt: -1 });
 
 // Grooming Application Form Data Schema
 const groomingSchema = mongoose.Schema(
@@ -102,9 +136,18 @@ const groomingSchema = mongoose.Schema(
     contactPhone: requiredTrimmedString,
     address: requiredTrimmedString,
     programId: { type: Number, required: true, index: true },
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "contacted", "scheduled", "closed"],
+      default: "new",
+      index: true,
+    },
   },
   schemaOptions
 );
+groomingSchema.index({ status: 1, createdAt: -1 });
+groomingSchema.index({ programId: 1, createdAt: -1 });
 
 // Boarding Application Form Data Schema
 const boardingSchema = mongoose.Schema(
@@ -114,9 +157,18 @@ const boardingSchema = mongoose.Schema(
     contactPhone: requiredTrimmedString,
     address: requiredTrimmedString,
     programId: { type: Number, required: true, index: true },
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "contacted", "scheduled", "closed"],
+      default: "new",
+      index: true,
+    },
   },
   schemaOptions
 );
+boardingSchema.index({ status: 1, createdAt: -1 });
+boardingSchema.index({ programId: 1, createdAt: -1 });
 
 // Volunteer Application Form Data Schema
 const volunteerApplicationSchema = mongoose.Schema(
@@ -139,6 +191,7 @@ const volunteerApplicationSchema = mongoose.Schema(
   },
   schemaOptions
 );
+volunteerApplicationSchema.index({ status: 1, createdAt: -1 });
 
 const OrderSchema = mongoose.Schema(
   {
@@ -203,6 +256,63 @@ const OrderSchema = mongoose.Schema(
   },
   schemaOptions
 );
+OrderSchema.index({ orderStatus: 1, createdAt: -1 });
+OrderSchema.index({ paymentStatus: 1, createdAt: -1 });
+
+const contentSchemaOptions = {
+  ...schemaOptions,
+  strict: false,
+};
+
+const AdoptableAnimalSchema = mongoose.Schema(
+  {
+    code: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+      index: true,
+    },
+  },
+  contentSchemaOptions
+);
+
+const ShopItemSchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+  },
+  contentSchemaOptions
+);
+
+const AdminCredentialSchema = mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+      index: true,
+    },
+    passwordSalt: {
+      type: String,
+      required: true,
+    },
+    passwordHash: {
+      type: String,
+      required: true,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  schemaOptions
+);
 
 // Schema to model
 export const PostLostPet = mongoose.model("lostPet", lostPetSchema);
@@ -225,3 +335,12 @@ export const VolunteerApplication = mongoose.model(
   volunteerApplicationSchema
 );
 export const Orders = mongoose.model("Order", OrderSchema);
+export const AdoptableAnimals = mongoose.model(
+  "AdoptableAnimal",
+  AdoptableAnimalSchema
+);
+export const ShopItems = mongoose.model("ShopItem", ShopItemSchema);
+export const AdminCredentials = mongoose.model(
+  "AdminCredential",
+  AdminCredentialSchema
+);

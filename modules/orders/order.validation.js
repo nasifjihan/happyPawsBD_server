@@ -1,10 +1,12 @@
 import {
   assertAllowedValues,
   assertRequiredFields,
+  assertValidEmail,
   createValidationError,
   normalizeEmail,
   normalizeString,
 } from "../../validation/common.js";
+import { calculateOrderTotal } from "./order.service.js";
 
 const allowedPaymentMethods = ["online_payment", "cash_on_delivery"];
 
@@ -30,12 +32,13 @@ export const validateOrderPayload = (payload) => {
     items: Array.isArray(payload?.orderSummary?.items)
       ? payload.orderSummary.items.map(normalizeOrderItem)
       : [],
-    total: Number(payload?.orderSummary?.total),
+    submittedTotal: Number(payload?.orderSummary?.total),
   };
 
   const paymentMethod = normalizeString(payload?.paymentMethod);
 
   assertRequiredFields(deliveryInfo, ["name", "phone", "email", "address"]);
+  assertValidEmail(deliveryInfo.email, "delivery email");
 
   if (!Array.isArray(orderSummary.items) || orderSummary.items.length === 0) {
     throw createValidationError("Order items are required.");
@@ -55,9 +58,21 @@ export const validateOrderPayload = (payload) => {
     }
   });
 
-  if (Number.isNaN(orderSummary.total) || orderSummary.total < 0) {
+  if (
+    Number.isNaN(orderSummary.submittedTotal) ||
+    orderSummary.submittedTotal < 0
+  ) {
     throw createValidationError("Order total must be a valid number.");
   }
+
+  const computedTotal = calculateOrderTotal(orderSummary.items);
+
+  if (Math.abs(orderSummary.submittedTotal - computedTotal) > 0.01) {
+    throw createValidationError("Order total does not match the provided items.");
+  }
+
+  orderSummary.total = computedTotal;
+  delete orderSummary.submittedTotal;
 
   assertAllowedValues(
     paymentMethod,

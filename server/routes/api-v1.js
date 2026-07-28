@@ -1,6 +1,8 @@
 import express from "express";
 
 import adoptionRoutes from "../../modules/adoption/adoption.routes.js";
+import adminRoutes from "../../modules/admin/admin.routes.js";
+import catalogRoutes from "../../modules/catalog/catalog.routes.js";
 import enrollmentRoutes from "../../modules/enrollments/enrollment.routes.js";
 import lostFoundRoutes from "../../modules/lost-found/lost-found.routes.js";
 import orderRoutes from "../../modules/orders/order.routes.js";
@@ -11,9 +13,11 @@ const router = express.Router();
 
 router.use("/lost-found", lostFoundRoutes);
 router.use("/adoption", adoptionRoutes);
+router.use("/catalog", catalogRoutes);
 router.use("/enrollments", enrollmentRoutes);
 router.use("/orders", orderRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/volunteers", volunteerRoutes);
+router.use("/admin", adminRoutes);
 
 export default router;

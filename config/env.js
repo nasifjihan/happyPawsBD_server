@@ -28,6 +28,9 @@ export const env = {
   host: process.env.HOST || DEFAULT_HOST,
   mongoUri: buildMongoUri(),
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+  adminTokenSecret: process.env.ADMIN_TOKEN_SECRET || "",
+  adminSeedUsername: process.env.ADMIN_USERNAME || "",
+  adminSeedPassword: process.env.ADMIN_PASSWORD || "",
 };
 
 export const ensureStartupConfig = () => {
