@@ -179,6 +179,9 @@ const volunteerApplicationSchema = mongoose.Schema(
     city: requiredTrimmedString,
     preferredRole: requiredTrimmedString,
     availability: requiredTrimmedString,
+    timeCommitment: optionalTrimmedString,
+    preferredContactMethod: optionalTrimmedString,
+    preferredContactTime: optionalTrimmedString,
     experience: optionalTrimmedString,
     motivation: requiredTrimmedString,
     status: {

@@ -13,6 +13,9 @@ export const validateVolunteerApplicationPayload = (payload) => {
     city: normalizeString(payload.city),
     preferredRole: normalizeString(payload.preferredRole),
     availability: normalizeString(payload.availability),
+    timeCommitment: normalizeString(payload.timeCommitment),
+    preferredContactMethod: normalizeString(payload.preferredContactMethod),
+    preferredContactTime: normalizeString(payload.preferredContactTime),
     experience: normalizeString(payload.experience),
     motivation: normalizeString(payload.motivation),
   };
