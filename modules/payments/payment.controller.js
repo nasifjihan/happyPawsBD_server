@@ -42,7 +42,11 @@ export const createPayment = async (req, res, next) => {
       orderStatus: "checkout_started",
     });
 
-    res.status(200).json({ sessionId: session.id });
+    res.status(200).json({
+      sessionId: session.id,
+      orderId: String(pendingOrder._id),
+      publicToken: pendingOrder.publicToken,
+    });
   } catch (error) {
     if (pendingOrder?._id) {
       try {

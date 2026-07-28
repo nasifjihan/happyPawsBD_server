@@ -250,6 +250,13 @@ const OrderSchema = mongoose.Schema(
       enum: ["unpaid", "paid", "failed", "cancelled"],
       default: "unpaid",
     },
+    publicToken: {
+      type: String,
+      trim: true,
+      index: true,
+      unique: true,
+      sparse: true,
+    },
     stripeCheckoutSessionId: {
       type: String,
       trim: true,

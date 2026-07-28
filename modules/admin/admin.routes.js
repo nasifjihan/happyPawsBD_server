@@ -1,10 +1,13 @@
 import express from "express";
 
 import {
+  getAdoptionApplicationAdmin,
   adminLogin,
   deleteAdoptableAnimalAdmin,
   deleteShopItemAdmin,
   getAdminSession,
+  getOrderAdmin,
+  getVolunteerApplicationAdmin,
   listAdoptionApplicationsAdmin,
   listAdoptableAnimalsAdmin,
   listEnrollmentsAdmin,
@@ -48,9 +51,15 @@ router.delete(
 );
 
 router.get("/orders", requireAdmin, listOrdersAdmin);
+router.get("/orders/:id", requireAdmin, getOrderAdmin);
 router.put("/orders/:id", requireAdmin, updateOrderAdmin);
 
 router.get("/requests/volunteers", requireAdmin, listVolunteerApplicationsAdmin);
+router.get(
+  "/requests/volunteers/:id",
+  requireAdmin,
+  getVolunteerApplicationAdmin
+);
 router.put(
   "/requests/volunteers/:id",
   requireAdmin,
@@ -58,6 +67,11 @@ router.put(
 );
 
 router.get("/requests/adoptions", requireAdmin, listAdoptionApplicationsAdmin);
+router.get(
+  "/requests/adoptions/:id",
+  requireAdmin,
+  getAdoptionApplicationAdmin
+);
 router.put(
   "/requests/adoptions/:id",
   requireAdmin,

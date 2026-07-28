@@ -235,6 +235,21 @@ export const listOrdersAdmin = async (req, res, next) => {
   }
 };
 
+export const getOrderAdmin = async (req, res, next) => {
+  try {
+    const order = await Orders.findById(req.params.id).lean();
+
+    if (!order) {
+      res.status(404).json({ message: "Order not found." });
+      return;
+    }
+
+    res.status(200).json(order);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateOrderAdmin = async (req, res, next) => {
   try {
     const allowedOrderStatuses = [
@@ -302,6 +317,21 @@ export const listVolunteerApplicationsAdmin = async (req, res, next) => {
   }
 };
 
+export const getVolunteerApplicationAdmin = async (req, res, next) => {
+  try {
+    const application = await VolunteerApplication.findById(req.params.id).lean();
+
+    if (!application) {
+      res.status(404).json({ message: "Volunteer application not found." });
+      return;
+    }
+
+    res.status(200).json(application);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateVolunteerApplicationAdmin = async (req, res, next) => {
   try {
     const status = String(req.body?.status || "");
@@ -339,6 +369,21 @@ export const listAdoptionApplicationsAdmin = async (req, res, next) => {
       sort: { createdAt: -1 },
     });
     res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdoptionApplicationAdmin = async (req, res, next) => {
+  try {
+    const application = await AdoptionApplication.findById(req.params.id).lean();
+
+    if (!application) {
+      res.status(404).json({ message: "Adoption application not found." });
+      return;
+    }
+
+    res.status(200).json(application);
   } catch (error) {
     next(error);
   }
