@@ -4,9 +4,15 @@ import {
   BoardingEnrollment,
   GroomingEnrollment,
   Orders,
+  OnlineConsultations,
+  Reviews,
   PostFoundPet,
   PostLostPet,
+  BoardingPrograms,
+  GroomingPrograms,
   ShopItems,
+  TrainingPrograms,
+  VetProviders,
   TrainingEnrollment,
   VolunteerApplication,
 } from "../../model/Schema.js";
@@ -29,11 +35,11 @@ const getPagination = (query) => ({
   limit: Math.min(normalizePositiveInteger(query.limit, 20), 100),
 });
 
-const createPaginatedResult = async ({ model, page, limit, sort }) => {
+const createPaginatedResult = async ({ model, page, limit, sort, filter = {} }) => {
   const skip = (page - 1) * limit;
   const [items, total] = await Promise.all([
-    model.find().sort(sort).skip(skip).limit(limit).lean(),
-    model.countDocuments(),
+    model.find(filter).sort(sort).skip(skip).limit(limit).lean(),
+    model.countDocuments(filter),
   ]);
 
   return {
@@ -44,6 +50,23 @@ const createPaginatedResult = async ({ model, page, limit, sort }) => {
     totalPages: Math.max(1, Math.ceil(total / limit)),
   };
 };
+
+const normalizeMediaUrl = (value) => {
+  if (value === undefined || value === null) {
+    return value;
+  }
+
+  return String(value)
+    .trim()
+    .replace(/^["'`]+/, "")
+    .replace(/["'`]+$/, "")
+    .trim();
+};
+
+const escapeRegexSource = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const createSearchRegex = (value) => new RegExp(escapeRegexSource(value), "i");
 
 export const adminLogin = async (req, res, next) => {
   try {
@@ -112,12 +135,33 @@ export const updateAdminPassword = async (req, res, next) => {
 
 export const listShopItemsAdmin = async (req, res, next) => {
   try {
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+    const filter = {};
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      const numericId = Number(q);
+      filter.$or = [
+        { name: regex },
+        { category: regex },
+        { brand: regex },
+        { type: regex },
+        { status: regex },
+        { description: regex },
+      ];
+
+      if (Number.isFinite(numericId)) {
+        filter.$or.push({ id: numericId });
+      }
+    }
+
     const { page, limit } = getPagination(req.query);
     const result = await createPaginatedResult({
       model: ShopItems,
       page,
       limit,
       sort: { id: 1 },
+      filter,
     });
     res.status(200).json(result);
   } catch (error) {
@@ -134,9 +178,15 @@ export const upsertShopItemAdmin = async (req, res, next) => {
       return;
     }
 
+    const nextPayload = {
+      ...req.body,
+      id,
+      image: normalizeMediaUrl(req.body?.image),
+    };
+
     const updated = await ShopItems.findOneAndUpdate(
       { id },
-      { $set: { ...req.body, id } },
+      { $set: nextPayload },
       { upsert: true, new: true, runValidators: true }
     ).lean();
 
@@ -165,14 +215,288 @@ export const deleteShopItemAdmin = async (req, res, next) => {
   }
 };
 
+export const listVetProvidersAdmin = async (req, res, next) => {
+  try {
+    const division = req.query?.division ? String(req.query.division).trim() : "";
+    const city = req.query?.city ? String(req.query.city).trim() : "";
+    const district = req.query?.district ? String(req.query.district).trim() : "";
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+    const filter = {};
+
+    if (division) {
+      filter.Division = division;
+    }
+
+    if (city) {
+      filter.City = city;
+    }
+
+    if (district) {
+      filter.District = district;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { title: regex },
+        { position: regex },
+        { Division: regex },
+        { District: regex },
+        { City: regex },
+        { location: regex },
+        { contact: regex },
+        { email: regex },
+        { services: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: VetProviders,
+      page,
+      limit,
+      sort: { id: 1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getVetProviderAdmin = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid provider id is required." });
+      return;
+    }
+
+    const provider = await VetProviders.findOne({ id }).lean();
+
+    if (!provider) {
+      res.status(404).json({ message: "Vet provider not found." });
+      return;
+    }
+
+    res.status(200).json(provider);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const upsertVetProviderAdmin = async (req, res, next) => {
+  try {
+    const id = Number(req.body?.id ?? req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid provider id is required." });
+      return;
+    }
+
+    const nextPayload = {
+      ...req.body,
+      id,
+      image: normalizeMediaUrl(req.body?.image),
+    };
+
+    const updated = await VetProviders.findOneAndUpdate(
+      { id },
+      { $set: nextPayload },
+      { upsert: true, new: true, runValidators: true }
+    ).lean();
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteVetProviderAdmin = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid provider id is required." });
+      return;
+    }
+
+    const result = await VetProviders.deleteOne({ id });
+
+    res.status(200).json({
+      deleted: result.deletedCount === 1,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const programModelForType = (type) => {
+  if (type === "training") return TrainingPrograms;
+  if (type === "grooming") return GroomingPrograms;
+  if (type === "boarding") return BoardingPrograms;
+  return null;
+};
+
+export const listProgramsAdmin = async (req, res, next) => {
+  try {
+    const type = String(req.params.type || "").trim();
+    const model = programModelForType(type);
+
+    if (!model) {
+      res.status(404).json({ message: "Program type not found." });
+      return;
+    }
+
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+    const filter = {};
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { title: regex },
+        { shortDescription: regex },
+        { description: regex },
+        { dis1: regex },
+        { dis2: regex },
+        { dis3: regex },
+        { duration: regex },
+        { Duration: regex },
+        { price: regex },
+        { Price: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model,
+      page,
+      limit,
+      sort: { id: 1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProgramAdmin = async (req, res, next) => {
+  try {
+    const type = String(req.params.type || "").trim();
+    const model = programModelForType(type);
+
+    if (!model) {
+      res.status(404).json({ message: "Program type not found." });
+      return;
+    }
+
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid program id is required." });
+      return;
+    }
+
+    const program = await model.findOne({ id }).lean();
+
+    if (!program) {
+      res.status(404).json({ message: "Program not found." });
+      return;
+    }
+
+    res.status(200).json(program);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const upsertProgramAdmin = async (req, res, next) => {
+  try {
+    const type = String(req.params.type || "").trim();
+    const model = programModelForType(type);
+
+    if (!model) {
+      res.status(404).json({ message: "Program type not found." });
+      return;
+    }
+
+    const id = Number(req.body?.id ?? req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid program id is required." });
+      return;
+    }
+
+    const nextPayload = {
+      ...req.body,
+      id,
+      picture: normalizeMediaUrl(req.body?.picture),
+    };
+
+    const updated = await model.findOneAndUpdate(
+      { id },
+      { $set: nextPayload },
+      { upsert: true, new: true, runValidators: true }
+    ).lean();
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteProgramAdmin = async (req, res, next) => {
+  try {
+    const type = String(req.params.type || "").trim();
+    const model = programModelForType(type);
+
+    if (!model) {
+      res.status(404).json({ message: "Program type not found." });
+      return;
+    }
+
+    const id = Number(req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid program id is required." });
+      return;
+    }
+
+    const result = await model.deleteOne({ id });
+
+    res.status(200).json({
+      deleted: result.deletedCount === 1,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const listAdoptableAnimalsAdmin = async (req, res, next) => {
   try {
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+    const filter = {};
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { code: regex },
+        { name: regex },
+        { species: regex },
+        { breed: regex },
+        { location: regex },
+        { gender: regex },
+      ];
+    }
+
     const { page, limit } = getPagination(req.query);
     const result = await createPaginatedResult({
       model: AdoptableAnimals,
       page,
       limit,
       sort: { code: 1 },
+      filter,
     });
     res.status(200).json(result);
   } catch (error) {
@@ -222,12 +546,71 @@ export const deleteAdoptableAnimalAdmin = async (req, res, next) => {
 
 export const listOrdersAdmin = async (req, res, next) => {
   try {
+    const allowedOrderStatuses = [
+      "created",
+      "pending_payment",
+      "checkout_started",
+      "payment_setup_failed",
+      "payment_failed",
+      "paid",
+      "cancelled",
+    ];
+    const allowedPaymentStatuses = ["unpaid", "paid", "failed", "cancelled"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.orderStatus) {
+      const orderStatus = String(req.query.orderStatus);
+      if (!allowedOrderStatuses.includes(orderStatus)) {
+        res.status(400).json({ message: "Invalid order status." });
+        return;
+      }
+      filter.orderStatus = orderStatus;
+    }
+
+    if (req.query?.paymentStatus) {
+      const paymentStatus = String(req.query.paymentStatus);
+      if (!allowedPaymentStatuses.includes(paymentStatus)) {
+        res.status(400).json({ message: "Invalid payment status." });
+        return;
+      }
+      filter.paymentStatus = paymentStatus;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      const regexSource = escapeRegexSource(q);
+      filter.$or = [
+        { "deliveryInfo.name": regex },
+        { "deliveryInfo.email": regex },
+        { "deliveryInfo.phone": regex },
+        { "deliveryInfo.city": regex },
+        { "deliveryInfo.state": regex },
+        { "deliveryInfo.zip": regex },
+        { "deliveryInfo.address": regex },
+        { paymentMethod: regex },
+        { publicToken: regex },
+        { stripeCheckoutSessionId: regex },
+        { "orderSummary.items.name": regex },
+        {
+          $expr: {
+            $regexMatch: {
+              input: { $toString: "$_id" },
+              regex: regexSource,
+              options: "i",
+            },
+          },
+        },
+      ];
+    }
+
     const { page, limit } = getPagination(req.query);
     const result = await createPaginatedResult({
       model: Orders,
       page,
       limit,
       sort: { createdAt: -1 },
+      filter,
     });
     res.status(200).json(result);
   } catch (error) {
@@ -304,12 +687,39 @@ export const updateOrderAdmin = async (req, res, next) => {
 
 export const listVolunteerApplicationsAdmin = async (req, res, next) => {
   try {
+    const allowedStatuses = ["new", "reviewed", "contacted", "closed"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.status) {
+      const status = String(req.query.status);
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { fullName: regex },
+        { contactEmail: regex },
+        { contactPhone: regex },
+        { city: regex },
+        { preferredRole: regex },
+        { availability: regex },
+        { motivation: regex },
+      ];
+    }
+
     const { page, limit } = getPagination(req.query);
     const result = await createPaginatedResult({
       model: VolunteerApplication,
       page,
       limit,
       sort: { createdAt: -1 },
+      filter,
     });
     res.status(200).json(result);
   } catch (error) {
@@ -361,12 +771,39 @@ export const updateVolunteerApplicationAdmin = async (req, res, next) => {
 
 export const listAdoptionApplicationsAdmin = async (req, res, next) => {
   try {
+    const allowedStatuses = ["new", "reviewed", "contacted", "approved", "rejected", "closed"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.status) {
+      const status = String(req.query.status);
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { animalCode: regex },
+        { animalType: regex },
+        { adopterName: regex },
+        { contactEmail: regex },
+        { contactPhone: regex },
+        { address: regex },
+        { experience: regex },
+      ];
+    }
+
     const { page, limit } = getPagination(req.query);
     const result = await createPaginatedResult({
       model: AdoptionApplication,
       page,
       limit,
       sort: { createdAt: -1 },
+      filter,
     });
     res.status(200).json(result);
   } catch (error) {
@@ -416,6 +853,99 @@ export const updateAdoptionApplicationAdmin = async (req, res, next) => {
   }
 };
 
+export const listOnlineConsultationsAdmin = async (req, res, next) => {
+  try {
+    const allowedStatuses = ["new", "reviewed", "confirmed", "completed", "cancelled"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.status) {
+      const status = String(req.query.status);
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { fullName: regex },
+        { contactEmail: regex },
+        { contactPhone: regex },
+        { petType: regex },
+        { petName: regex },
+        { preferredDoctor: regex },
+        { preferredSlot: regex },
+        { concern: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: OnlineConsultations,
+      page,
+      limit,
+      sort: { createdAt: -1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getOnlineConsultationAdmin = async (req, res, next) => {
+  try {
+    const consultation = await OnlineConsultations.findById(req.params.id).lean();
+
+    if (!consultation) {
+      res.status(404).json({ message: "Online consultation not found." });
+      return;
+    }
+
+    res.status(200).json(consultation);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateOnlineConsultationAdmin = async (req, res, next) => {
+  try {
+    const status = String(req.body?.status || "");
+    const allowedStatuses = ["new", "reviewed", "confirmed", "completed", "cancelled"];
+
+    if (!allowedStatuses.includes(status)) {
+      res.status(400).json({ message: "Invalid status." });
+      return;
+    }
+
+    const updates = {
+      status,
+    };
+
+    if ("adminNotes" in req.body) {
+      updates.adminNotes = String(req.body.adminNotes || "").trim();
+    }
+
+    const updated = await OnlineConsultations.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true }
+    ).lean();
+
+    if (!updated) {
+      res.status(404).json({ message: "Online consultation not found." });
+      return;
+    }
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const enrollmentModels = {
   training: TrainingEnrollment,
   grooming: GroomingEnrollment,
@@ -432,12 +962,36 @@ export const listEnrollmentsAdmin = async (req, res, next) => {
       return;
     }
 
+    const allowedStatuses = ["new", "reviewed", "contacted", "scheduled", "closed"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.status) {
+      const status = String(req.query.status);
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { name: regex },
+        { contactEmail: regex },
+        { contactPhone: regex },
+        { address: regex },
+      ];
+    }
+
     const { page, limit } = getPagination(req.query);
     const result = await createPaginatedResult({
       model,
       page,
       limit,
       sort: { createdAt: -1 },
+      filter,
     });
     res.status(200).json(result);
   } catch (error) {
@@ -491,12 +1045,54 @@ export const listLostFoundAdmin = async (req, res, next) => {
       return;
     }
 
+    const allowedStatuses = ["new", "reviewed", "resolved", "closed"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.status) {
+      const status = String(req.query.status);
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+
+      filter.$or =
+        type === "lost-pets"
+          ? [
+              { petName: regex },
+              { animalType: regex },
+              { colors: regex },
+              { ownerName: regex },
+              { contactPhone: regex },
+              { contactEmail: regex },
+              { lastSeenLocation: regex },
+              { description: regex },
+            ]
+          : [
+              { animalType: regex },
+              { breed: regex },
+              { colors: regex },
+              { gender: regex },
+              { founderName: regex },
+              { contactPhone: regex },
+              { contactEmail: regex },
+              { foundLocation: regex },
+              { description: regex },
+            ];
+    }
+
     const { page, limit } = getPagination(req.query);
     const result = await createPaginatedResult({
       model,
       page,
       limit,
       sort: { createdAt: -1 },
+      filter,
     });
     res.status(200).json(result);
   } catch (error) {
@@ -526,6 +1122,93 @@ export const updateLostFoundAdmin = async (req, res, next) => {
 
     if (!updated) {
       res.status(404).json({ message: "Report not found." });
+      return;
+    }
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const listReviewsAdmin = async (req, res, next) => {
+  try {
+    const allowedStatuses = ["new", "approved", "rejected"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.status) {
+      const status = String(req.query.status);
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { fullName: regex },
+        { contactEmail: regex },
+        { title: regex },
+        { message: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: Reviews,
+      page,
+      limit,
+      sort: { createdAt: -1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getReviewAdmin = async (req, res, next) => {
+  try {
+    const review = await Reviews.findById(req.params.id).lean();
+
+    if (!review) {
+      res.status(404).json({ message: "Review not found." });
+      return;
+    }
+
+    res.status(200).json(review);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateReviewAdmin = async (req, res, next) => {
+  try {
+    const status = String(req.body?.status || "");
+    const allowedStatuses = ["new", "approved", "rejected"];
+
+    if (!allowedStatuses.includes(status)) {
+      res.status(400).json({ message: "Invalid status." });
+      return;
+    }
+
+    const updates = {
+      status,
+    };
+
+    if ("adminNotes" in req.body) {
+      updates.adminNotes = String(req.body.adminNotes || "").trim();
+    }
+
+    const updated = await Reviews.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+    }).lean();
+
+    if (!updated) {
+      res.status(404).json({ message: "Review not found." });
       return;
     }
 

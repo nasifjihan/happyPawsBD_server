@@ -31,5 +31,3 @@ const readJsonFile = async (fileName) => {
 
 export const getAdoptableAnimals = async () =>
   readJsonFile("adoptableAnimals.json");
-
-export const getShopItems = async () => readJsonFile("shopItems.json");

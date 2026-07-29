@@ -5,21 +5,35 @@ import {
   adminLogin,
   deleteAdoptableAnimalAdmin,
   deleteShopItemAdmin,
+  deleteProgramAdmin,
+  deleteVetProviderAdmin,
   getAdminSession,
+  getOnlineConsultationAdmin,
   getOrderAdmin,
+  getProgramAdmin,
+  getReviewAdmin,
+  getVetProviderAdmin,
   getVolunteerApplicationAdmin,
   listAdoptionApplicationsAdmin,
   listAdoptableAnimalsAdmin,
   listEnrollmentsAdmin,
   listLostFoundAdmin,
+  listOnlineConsultationsAdmin,
   listOrdersAdmin,
+  listProgramsAdmin,
+  listReviewsAdmin,
   listShopItemsAdmin,
+  listVetProvidersAdmin,
   listVolunteerApplicationsAdmin,
   updateAdoptionApplicationAdmin,
   updateAdminPassword,
   updateEnrollmentAdmin,
   updateLostFoundAdmin,
+  updateOnlineConsultationAdmin,
   updateOrderAdmin,
+  updateReviewAdmin,
+  upsertProgramAdmin,
+  upsertVetProviderAdmin,
   updateVolunteerApplicationAdmin,
   upsertAdoptableAnimalAdmin,
   upsertShopItemAdmin,
@@ -36,6 +50,18 @@ router.get("/catalog/shop-items", requireAdmin, listShopItemsAdmin);
 router.post("/catalog/shop-items", requireAdmin, upsertShopItemAdmin);
 router.put("/catalog/shop-items/:id", requireAdmin, upsertShopItemAdmin);
 router.delete("/catalog/shop-items/:id", requireAdmin, deleteShopItemAdmin);
+
+router.get("/catalog/vets", requireAdmin, listVetProvidersAdmin);
+router.get("/catalog/vets/:id", requireAdmin, getVetProviderAdmin);
+router.post("/catalog/vets", requireAdmin, upsertVetProviderAdmin);
+router.put("/catalog/vets/:id", requireAdmin, upsertVetProviderAdmin);
+router.delete("/catalog/vets/:id", requireAdmin, deleteVetProviderAdmin);
+
+router.get("/catalog/programs/:type", requireAdmin, listProgramsAdmin);
+router.get("/catalog/programs/:type/:id", requireAdmin, getProgramAdmin);
+router.post("/catalog/programs/:type", requireAdmin, upsertProgramAdmin);
+router.put("/catalog/programs/:type/:id", requireAdmin, upsertProgramAdmin);
+router.delete("/catalog/programs/:type/:id", requireAdmin, deleteProgramAdmin);
 
 router.get("/adoption/animals", requireAdmin, listAdoptableAnimalsAdmin);
 router.post("/adoption/animals", requireAdmin, upsertAdoptableAnimalAdmin);
@@ -78,6 +104,22 @@ router.put(
   updateAdoptionApplicationAdmin
 );
 
+router.get(
+  "/requests/consultations/online",
+  requireAdmin,
+  listOnlineConsultationsAdmin
+);
+router.get(
+  "/requests/consultations/online/:id",
+  requireAdmin,
+  getOnlineConsultationAdmin
+);
+router.put(
+  "/requests/consultations/online/:id",
+  requireAdmin,
+  updateOnlineConsultationAdmin
+);
+
 router.get("/requests/enrollments/:type", requireAdmin, listEnrollmentsAdmin);
 router.put(
   "/requests/enrollments/:type/:id",
@@ -91,5 +133,9 @@ router.put(
   requireAdmin,
   updateLostFoundAdmin
 );
+
+router.get("/requests/reviews", requireAdmin, listReviewsAdmin);
+router.get("/requests/reviews/:id", requireAdmin, getReviewAdmin);
+router.put("/requests/reviews/:id", requireAdmin, updateReviewAdmin);
 
 export default router;

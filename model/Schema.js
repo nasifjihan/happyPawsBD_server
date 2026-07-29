@@ -196,6 +196,56 @@ const volunteerApplicationSchema = mongoose.Schema(
 );
 volunteerApplicationSchema.index({ status: 1, createdAt: -1 });
 
+const onlineConsultationSchema = mongoose.Schema(
+  {
+    fullName: requiredTrimmedString,
+    contactEmail: optionalEmailField,
+    contactPhone: requiredTrimmedString,
+    petType: requiredTrimmedString,
+    petName: optionalTrimmedString,
+    petAge: optionalTrimmedString,
+    consultationMode: {
+      type: String,
+      trim: true,
+      enum: ["video", "phone"],
+      default: "video",
+    },
+    preferredDoctor: optionalTrimmedString,
+    preferredSlot: optionalTrimmedString,
+    concern: requiredTrimmedString,
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "confirmed", "completed", "cancelled"],
+      default: "new",
+      index: true,
+    },
+    adminNotes: optionalTrimmedString,
+  },
+  schemaOptions
+);
+onlineConsultationSchema.index({ status: 1, createdAt: -1 });
+
+const reviewSchema = mongoose.Schema(
+  {
+    fullName: requiredTrimmedString,
+    contactEmail: optionalEmailField,
+    rating: { type: Number, min: 1, max: 5, required: true },
+    title: requiredTrimmedString,
+    message: requiredTrimmedString,
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "approved", "rejected"],
+      default: "new",
+      index: true,
+    },
+    adminNotes: optionalTrimmedString,
+  },
+  schemaOptions
+);
+reviewSchema.index({ status: 1, createdAt: -1 });
+
 const OrderSchema = mongoose.Schema(
   {
     deliveryInfo: {
@@ -299,6 +349,54 @@ const ShopItemSchema = mongoose.Schema(
   contentSchemaOptions
 );
 
+const VetProviderSchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+  },
+  contentSchemaOptions
+);
+
+const TrainingProgramSchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+  },
+  contentSchemaOptions
+);
+
+const GroomingProgramSchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+  },
+  contentSchemaOptions
+);
+
+const BoardingProgramSchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+  },
+  contentSchemaOptions
+);
+
 const AdminCredentialSchema = mongoose.Schema(
   {
     username: {
@@ -344,12 +442,30 @@ export const VolunteerApplication = mongoose.model(
   "VolunteerApplication",
   volunteerApplicationSchema
 );
+export const OnlineConsultations = mongoose.model(
+  "OnlineConsultation",
+  onlineConsultationSchema
+);
+export const Reviews = mongoose.model("SiteReview", reviewSchema);
 export const Orders = mongoose.model("Order", OrderSchema);
 export const AdoptableAnimals = mongoose.model(
   "AdoptableAnimal",
   AdoptableAnimalSchema
 );
 export const ShopItems = mongoose.model("ShopItem", ShopItemSchema);
+export const VetProviders = mongoose.model("VetProvider", VetProviderSchema);
+export const TrainingPrograms = mongoose.model(
+  "TrainingProgram",
+  TrainingProgramSchema
+);
+export const GroomingPrograms = mongoose.model(
+  "GroomingProgram",
+  GroomingProgramSchema
+);
+export const BoardingPrograms = mongoose.model(
+  "BoardingProgram",
+  BoardingProgramSchema
+);
 export const AdminCredentials = mongoose.model(
   "AdminCredential",
   AdminCredentialSchema

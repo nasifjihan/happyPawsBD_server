@@ -4,7 +4,13 @@ import { fileURLToPath } from "node:url";
 
 import Connection from "../database/db.js";
 import { ensureStartupConfig } from "../config/env.js";
-import { AdoptableAnimals, ShopItems } from "../model/Schema.js";
+import {
+  AdoptableAnimals,
+  BoardingPrograms,
+  GroomingPrograms,
+  TrainingPrograms,
+  VetProviders,
+} from "../model/Schema.js";
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDirectory = path.dirname(currentFilePath);
@@ -12,6 +18,11 @@ const dataDirectory = path.resolve(currentDirectory, "../data");
 
 const readJson = async (fileName) => {
   const filePath = path.join(dataDirectory, fileName);
+  const raw = await readFile(filePath, "utf-8");
+  return JSON.parse(raw);
+};
+
+const readJsonAbsolute = async (filePath) => {
   const raw = await readFile(filePath, "utf-8");
   return JSON.parse(raw);
 };
@@ -45,23 +56,133 @@ const upsertMany = async (model, docs, uniqueKey) => {
   };
 };
 
+const normalizeMediaUrl = (value) => {
+  if (value === undefined || value === null) {
+    return value;
+  }
+
+  return String(value)
+    .trim()
+    .replace(/^["'`]+/, "")
+    .replace(/["'`]+$/, "")
+    .trim();
+};
+
 const seedContent = async () => {
   ensureStartupConfig();
   await Connection();
 
-  const [adoptableAnimals, shopItems] = await Promise.all([
-    readJson("adoptableAnimals.json"),
-    readJson("shopItems.json"),
-  ]);
+  const adoptableAnimals = await readJson("adoptableAnimals.json");
+  const adoptableResult = await upsertMany(
+    AdoptableAnimals,
+    adoptableAnimals,
+    "code"
+  );
 
-  const [adoptableResult, shopResult] = await Promise.all([
-    upsertMany(AdoptableAnimals, adoptableAnimals, "code"),
-    upsertMany(ShopItems, shopItems, "id"),
-  ]);
+  const veterinaryDataPath = path.resolve(
+    currentDirectory,
+    "../../happyPawsBD_client/src/API/veterinary.json"
+  );
+  const vetProviders = await readJsonAbsolute(veterinaryDataPath);
+  const vetResult = await upsertMany(
+    VetProviders,
+    vetProviders.map((provider) => ({
+      ...provider,
+      image: normalizeMediaUrl(provider?.image),
+    })),
+    "id"
+  );
+
+  const trainingMeta = {
+    1: {
+      duration: "6 weeks",
+      price: "BDT 4,500",
+      programCovers:
+        "Sit, stay, recall, leash manners, and owner communication basics.",
+    },
+    2: {
+      duration: "4 weeks",
+      price: "BDT 3,000",
+      programCovers:
+        "Routine building, potty cues, crate support, and home consistency tips.",
+    },
+    3: {
+      duration: "5 weeks",
+      price: "BDT 3,800",
+      programCovers: "Loose-leash walking, outdoor focus, and calmer public walks.",
+    },
+    4: {
+      duration: "5 weeks",
+      price: "BDT 4,000",
+      programCovers:
+        "Confidence building, healthy introductions, and positive exposure work.",
+    },
+    5: {
+      duration: "8 weeks",
+      price: "BDT 6,000",
+      programCovers:
+        "Behavior assessment, redirection plans, and ongoing owner guidance.",
+    },
+    6: {
+      duration: "Custom schedule",
+      price: "Consultation required",
+      programCovers:
+        "Trainer assessment, suitability review, and closely supervised guidance.",
+    },
+  };
+
+  const trainingPath = path.resolve(
+    currentDirectory,
+    "../../happyPawsBD_client/src/API/training.json"
+  );
+  const trainingPrograms = await readJsonAbsolute(trainingPath);
+  const trainingResult = await upsertMany(
+    TrainingPrograms,
+    trainingPrograms.map((program) => ({
+      ...program,
+      picture: normalizeMediaUrl(program?.picture),
+      ...(trainingMeta[program?.id] || {}),
+    })),
+    "id"
+  );
+
+  const groomingPath = path.resolve(
+    currentDirectory,
+    "../../happyPawsBD_client/src/API/petGrooming.json"
+  );
+  const groomingPrograms = await readJsonAbsolute(groomingPath);
+  const groomingResult = await upsertMany(
+    GroomingPrograms,
+    groomingPrograms.map((program) => ({
+      ...program,
+      picture: normalizeMediaUrl(program?.picture),
+      duration: program?.duration || program?.Duration || "",
+      price: program?.price || program?.Price || "",
+      programCovers: program?.programCovers || program?.ProgramCovers || "",
+    })),
+    "id"
+  );
+
+  const boardingPath = path.resolve(
+    currentDirectory,
+    "../../happyPawsBD_client/src/API/petBoarding.json"
+  );
+  const boardingPrograms = await readJsonAbsolute(boardingPath);
+  const boardingResult = await upsertMany(
+    BoardingPrograms,
+    boardingPrograms.map((program) => ({
+      ...program,
+      picture: normalizeMediaUrl(program?.picture),
+    })),
+    "id"
+  );
 
   console.log("Seed complete.");
   console.log("Adoptable animals:", adoptableResult);
-  console.log("Shop items:", shopResult);
+  console.log("Vet providers:", vetResult);
+  console.log("Training programs:", trainingResult);
+  console.log("Grooming programs:", groomingResult);
+  console.log("Boarding programs:", boardingResult);
 };
 
 seedContent()
