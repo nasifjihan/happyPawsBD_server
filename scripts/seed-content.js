@@ -7,7 +7,9 @@ import { ensureStartupConfig } from "../config/env.js";
 import {
   AdoptableAnimals,
   BoardingPrograms,
+  CommunityStories,
   GroomingPrograms,
+  SiteSettings,
   TrainingPrograms,
   VetProviders,
 } from "../model/Schema.js";
@@ -177,12 +179,36 @@ const seedContent = async () => {
     "id"
   );
 
+  const communityStories = await readJson("communityStories.json");
+  const communityStoryResult = await upsertMany(
+    CommunityStories,
+    communityStories.map((entry) => ({
+      ...entry,
+      image: normalizeMediaUrl(entry?.image),
+    })),
+    "id"
+  );
+
+  const rawSiteSettings = await readJson("siteSettings.json");
+  const siteSettings = {
+    ...rawSiteSettings,
+    mapUrl: normalizeMediaUrl(rawSiteSettings?.mapUrl),
+    mapEmbedUrl: normalizeMediaUrl(rawSiteSettings?.mapEmbedUrl),
+    facebookUrl: normalizeMediaUrl(rawSiteSettings?.facebookUrl),
+    instagramUrl: normalizeMediaUrl(rawSiteSettings?.instagramUrl),
+    youtubeUrl: normalizeMediaUrl(rawSiteSettings?.youtubeUrl),
+    homeHeroImageUrl: normalizeMediaUrl(rawSiteSettings?.homeHeroImageUrl),
+  };
+  const siteSettingsResult = await upsertMany(SiteSettings, [siteSettings], "key");
+
   console.log("Seed complete.");
   console.log("Adoptable animals:", adoptableResult);
   console.log("Vet providers:", vetResult);
   console.log("Training programs:", trainingResult);
   console.log("Grooming programs:", groomingResult);
   console.log("Boarding programs:", boardingResult);
+  console.log("Stories:", communityStoryResult);
+  console.log("Site settings:", siteSettingsResult);
 };
 
 seedContent()

@@ -10,6 +10,8 @@ import orderRoutes from "../../modules/orders/order.routes.js";
 import paymentRoutes from "../../modules/payments/payment.routes.js";
 import programsRoutes from "../../modules/programs/programs.routes.js";
 import reviewRoutes from "../../modules/reviews/review.routes.js";
+import storyRoutes from "../../modules/stories/story.routes.js";
+import siteSettingsRoutes from "../../modules/site-settings/site-settings.routes.js";
 import vetsRoutes from "../../modules/vets/vets.routes.js";
 import volunteerRoutes from "../../modules/volunteers/volunteer.routes.js";
 
@@ -24,6 +26,8 @@ router.use("/orders", orderRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/programs", programsRoutes);
 router.use("/reviews", reviewRoutes);
+router.use("/stories", storyRoutes);
+router.use("/site-settings", siteSettingsRoutes);
 router.use("/vets", vetsRoutes);
 router.use("/volunteers", volunteerRoutes);
 router.use("/admin", adminRoutes);

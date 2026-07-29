@@ -246,6 +246,53 @@ const reviewSchema = mongoose.Schema(
 );
 reviewSchema.index({ status: 1, createdAt: -1 });
 
+const communityStorySchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    category: {
+      type: String,
+      trim: true,
+      required: true,
+      enum: ["success", "remembrance", "community"],
+      index: true,
+    },
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "draft", "published", "rejected", "archived"],
+      default: "draft",
+      index: true,
+    },
+    title: requiredTrimmedString,
+    excerpt: optionalTrimmedString,
+    story: requiredTrimmedString,
+    authorName: optionalTrimmedString,
+    contactEmail: optionalEmailField,
+    contactPhone: optionalTrimmedString,
+    petName: optionalTrimmedString,
+    location: optionalTrimmedString,
+    image: optionalTrimmedString,
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    featured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+  },
+  schemaOptions
+);
+communityStorySchema.index({ category: 1, status: 1, createdAt: -1 });
+
 const OrderSchema = mongoose.Schema(
   {
     deliveryInfo: {
@@ -422,6 +469,40 @@ const AdminCredentialSchema = mongoose.Schema(
   schemaOptions
 );
 
+const SiteSettingsSchema = mongoose.Schema(
+  {
+    key: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+      index: true,
+      default: "default",
+    },
+    brandName: optionalTrimmedString,
+    contactEmail: optionalEmailField,
+    contactPhone: optionalTrimmedString,
+    whatsapp: optionalTrimmedString,
+    address: optionalTrimmedString,
+    city: optionalTrimmedString,
+    mapUrl: optionalTrimmedString,
+    mapEmbedUrl: optionalTrimmedString,
+    facebookUrl: optionalTrimmedString,
+    instagramUrl: optionalTrimmedString,
+    youtubeUrl: optionalTrimmedString,
+    donationBkashNumber: optionalTrimmedString,
+    donationEmail: optionalEmailField,
+    homeHeroBadge: optionalTrimmedString,
+    homeHeroTitle: optionalTrimmedString,
+    homeHeroSubtitle: optionalTrimmedString,
+    homeHeroImageUrl: optionalTrimmedString,
+    homeHeroImageAlt: optionalTrimmedString,
+    homeAdoptedCount: optionalTrimmedString,
+    homeAdoptedLabel: optionalTrimmedString,
+  },
+  schemaOptions
+);
+
 // Schema to model
 export const PostLostPet = mongoose.model("lostPet", lostPetSchema);
 export const PostFoundPet = mongoose.model("foundPet", foundPetSchema);
@@ -447,6 +528,7 @@ export const OnlineConsultations = mongoose.model(
   onlineConsultationSchema
 );
 export const Reviews = mongoose.model("SiteReview", reviewSchema);
+export const CommunityStories = mongoose.model("CommunityStory", communityStorySchema);
 export const Orders = mongoose.model("Order", OrderSchema);
 export const AdoptableAnimals = mongoose.model(
   "AdoptableAnimal",
@@ -470,3 +552,4 @@ export const AdminCredentials = mongoose.model(
   "AdminCredential",
   AdminCredentialSchema
 );
+export const SiteSettings = mongoose.model("SiteSettings", SiteSettingsSchema);

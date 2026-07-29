@@ -7,11 +7,13 @@ import {
   deleteShopItemAdmin,
   deleteProgramAdmin,
   deleteVetProviderAdmin,
+  getSiteSettingsAdmin,
   getAdminSession,
   getOnlineConsultationAdmin,
   getOrderAdmin,
   getProgramAdmin,
   getReviewAdmin,
+  getStoryAdmin,
   getVetProviderAdmin,
   getVolunteerApplicationAdmin,
   listAdoptionApplicationsAdmin,
@@ -23,16 +25,20 @@ import {
   listProgramsAdmin,
   listReviewsAdmin,
   listShopItemsAdmin,
+  listStoriesAdmin,
   listVetProvidersAdmin,
   listVolunteerApplicationsAdmin,
+  deleteStoryAdmin,
   updateAdoptionApplicationAdmin,
   updateAdminPassword,
+  updateSiteSettingsAdmin,
   updateEnrollmentAdmin,
   updateLostFoundAdmin,
   updateOnlineConsultationAdmin,
   updateOrderAdmin,
   updateReviewAdmin,
   upsertProgramAdmin,
+  upsertStoryAdmin,
   upsertVetProviderAdmin,
   updateVolunteerApplicationAdmin,
   upsertAdoptableAnimalAdmin,
@@ -45,6 +51,8 @@ const router = express.Router();
 router.post("/login", adminLogin);
 router.get("/me", requireAdmin, getAdminSession);
 router.put("/credentials", requireAdmin, updateAdminPassword);
+router.get("/settings/site", requireAdmin, getSiteSettingsAdmin);
+router.put("/settings/site", requireAdmin, updateSiteSettingsAdmin);
 
 router.get("/catalog/shop-items", requireAdmin, listShopItemsAdmin);
 router.post("/catalog/shop-items", requireAdmin, upsertShopItemAdmin);
@@ -62,6 +70,12 @@ router.get("/catalog/programs/:type/:id", requireAdmin, getProgramAdmin);
 router.post("/catalog/programs/:type", requireAdmin, upsertProgramAdmin);
 router.put("/catalog/programs/:type/:id", requireAdmin, upsertProgramAdmin);
 router.delete("/catalog/programs/:type/:id", requireAdmin, deleteProgramAdmin);
+
+router.get("/content/stories", requireAdmin, listStoriesAdmin);
+router.get("/content/stories/:id", requireAdmin, getStoryAdmin);
+router.post("/content/stories", requireAdmin, upsertStoryAdmin);
+router.put("/content/stories/:id", requireAdmin, upsertStoryAdmin);
+router.delete("/content/stories/:id", requireAdmin, deleteStoryAdmin);
 
 router.get("/adoption/animals", requireAdmin, listAdoptableAnimalsAdmin);
 router.post("/adoption/animals", requireAdmin, upsertAdoptableAnimalAdmin);

@@ -6,11 +6,13 @@ import {
   Orders,
   OnlineConsultations,
   Reviews,
+  CommunityStories,
   PostFoundPet,
   PostLostPet,
   BoardingPrograms,
   GroomingPrograms,
   ShopItems,
+  SiteSettings,
   TrainingPrograms,
   VetProviders,
   TrainingEnrollment,
@@ -67,6 +69,11 @@ const escapeRegexSource = (value) =>
   String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const createSearchRegex = (value) => new RegExp(escapeRegexSource(value), "i");
+
+const getNextCommunityStoryId = async () => {
+  const latest = await CommunityStories.findOne({}, { id: 1 }).sort({ id: -1 }).lean();
+  return Number(latest?.id || 0) + 1;
+};
 
 export const adminLogin = async (req, res, next) => {
   try {
@@ -128,6 +135,77 @@ export const updateAdminPassword = async (req, res, next) => {
     res.status(200).json({
       username: updated?.username || req.admin.username,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSiteSettingsAdmin = async (req, res, next) => {
+  try {
+    const settings = await SiteSettings.findOneAndUpdate(
+      { key: "default" },
+      { $setOnInsert: { key: "default" } },
+      { upsert: true, new: true }
+    ).lean();
+
+    res.status(200).json(settings);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateSiteSettingsAdmin = async (req, res, next) => {
+  try {
+    const payload = {
+      brandName: req.body?.brandName ? String(req.body.brandName).trim() : "",
+      contactEmail: req.body?.contactEmail
+        ? String(req.body.contactEmail).trim()
+        : "",
+      contactPhone: req.body?.contactPhone
+        ? String(req.body.contactPhone).trim()
+        : "",
+      whatsapp: req.body?.whatsapp ? String(req.body.whatsapp).trim() : "",
+      address: req.body?.address ? String(req.body.address).trim() : "",
+      city: req.body?.city ? String(req.body.city).trim() : "",
+      mapUrl: req.body?.mapUrl ? String(req.body.mapUrl).trim() : "",
+      mapEmbedUrl: req.body?.mapEmbedUrl ? String(req.body.mapEmbedUrl).trim() : "",
+      facebookUrl: req.body?.facebookUrl ? String(req.body.facebookUrl).trim() : "",
+      instagramUrl: req.body?.instagramUrl
+        ? String(req.body.instagramUrl).trim()
+        : "",
+      youtubeUrl: req.body?.youtubeUrl ? String(req.body.youtubeUrl).trim() : "",
+      donationBkashNumber: req.body?.donationBkashNumber
+        ? String(req.body.donationBkashNumber).trim()
+        : "",
+      donationEmail: req.body?.donationEmail
+        ? String(req.body.donationEmail).trim()
+        : "",
+      homeHeroBadge: req.body?.homeHeroBadge ? String(req.body.homeHeroBadge).trim() : "",
+      homeHeroTitle: req.body?.homeHeroTitle ? String(req.body.homeHeroTitle).trim() : "",
+      homeHeroSubtitle: req.body?.homeHeroSubtitle
+        ? String(req.body.homeHeroSubtitle).trim()
+        : "",
+      homeHeroImageUrl: req.body?.homeHeroImageUrl
+        ? normalizeMediaUrl(req.body.homeHeroImageUrl)
+        : "",
+      homeHeroImageAlt: req.body?.homeHeroImageAlt
+        ? String(req.body.homeHeroImageAlt).trim()
+        : "",
+      homeAdoptedCount: req.body?.homeAdoptedCount
+        ? String(req.body.homeAdoptedCount).trim()
+        : "",
+      homeAdoptedLabel: req.body?.homeAdoptedLabel
+        ? String(req.body.homeAdoptedLabel).trim()
+        : "",
+    };
+
+    const updated = await SiteSettings.findOneAndUpdate(
+      { key: "default" },
+      { $setOnInsert: { key: "default" }, $set: payload },
+      { upsert: true, new: true, runValidators: true }
+    ).lean();
+
+    res.status(200).json(updated);
   } catch (error) {
     next(error);
   }
@@ -377,6 +455,178 @@ export const listProgramsAdmin = async (req, res, next) => {
       filter,
     });
     res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const listStoriesAdmin = async (req, res, next) => {
+  try {
+    const allowedCategories = ["success", "remembrance", "community"];
+    const allowedStatuses = ["new", "draft", "published", "rejected", "archived"];
+
+    const category = req.query?.category ? String(req.query.category).trim() : "";
+    const status = req.query?.status ? String(req.query.status).trim() : "";
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+    const filter = {};
+
+    if (category) {
+      if (!allowedCategories.includes(category)) {
+        res.status(400).json({ message: "Invalid category." });
+        return;
+      }
+      filter.category = category;
+    }
+
+    if (status) {
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { title: regex },
+        { excerpt: regex },
+        { story: regex },
+        { authorName: regex },
+        { petName: regex },
+        { location: regex },
+        { tags: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: CommunityStories,
+      page,
+      limit,
+      sort: { featured: -1, createdAt: -1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStoryAdmin = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid story id is required." });
+      return;
+    }
+
+    const story = await CommunityStories.findOne({ id }).lean();
+
+    if (!story) {
+      res.status(404).json({ message: "Story not found." });
+      return;
+    }
+
+    res.status(200).json(story);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const upsertStoryAdmin = async (req, res, next) => {
+  try {
+    const allowedCategories = ["success", "remembrance", "community"];
+    const allowedStatuses = ["new", "draft", "published", "rejected", "archived"];
+
+    const paramIdRaw = req.params?.id;
+    if (paramIdRaw) {
+      const parsed = Number(paramIdRaw);
+      if (!Number.isFinite(parsed)) {
+        res.status(400).json({ message: "Valid story id is required." });
+        return;
+      }
+    }
+
+    const bodyIdRaw = req.body?.id;
+    const bodyId =
+      bodyIdRaw !== undefined && bodyIdRaw !== null && bodyIdRaw !== ""
+        ? Number(bodyIdRaw)
+        : null;
+    const paramId = paramIdRaw ? Number(paramIdRaw) : null;
+    const id = Number.isFinite(bodyId)
+      ? bodyId
+      : Number.isFinite(paramId)
+        ? paramId
+        : await getNextCommunityStoryId();
+
+    const category = req.body?.category ? String(req.body.category).trim() : "";
+    if (!category || !allowedCategories.includes(category)) {
+      res.status(400).json({ message: "Valid category is required." });
+      return;
+    }
+
+    const status = req.body?.status ? String(req.body.status).trim() : "draft";
+    if (!allowedStatuses.includes(status)) {
+      res.status(400).json({ message: "Invalid status." });
+      return;
+    }
+
+    const nextPayload = {
+      ...req.body,
+      id,
+      category,
+      status,
+      title: req.body?.title ? String(req.body.title).trim() : "",
+      excerpt: req.body?.excerpt ? String(req.body.excerpt).trim() : "",
+      story: req.body?.story ? String(req.body.story).trim() : "",
+      authorName: req.body?.authorName ? String(req.body.authorName).trim() : "",
+      contactEmail: req.body?.contactEmail ? String(req.body.contactEmail).trim() : "",
+      contactPhone: req.body?.contactPhone ? String(req.body.contactPhone).trim() : "",
+      petName: req.body?.petName ? String(req.body.petName).trim() : "",
+      location: req.body?.location ? String(req.body.location).trim() : "",
+      image: normalizeMediaUrl(req.body?.image),
+      tags: Array.isArray(req.body?.tags)
+        ? req.body.tags.map((tag) => String(tag).trim()).filter(Boolean)
+        : String(req.body?.tags || "")
+            .split(/[\n,]+/g)
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+      featured: Boolean(req.body?.featured),
+    };
+
+    if (!nextPayload.title || !nextPayload.story) {
+      res.status(400).json({ message: "Title and story are required." });
+      return;
+    }
+
+    const updated = await CommunityStories.findOneAndUpdate(
+      { id },
+      { $set: nextPayload },
+      { upsert: true, new: true, runValidators: true }
+    ).lean();
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteStoryAdmin = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid story id is required." });
+      return;
+    }
+
+    const result = await CommunityStories.deleteOne({ id });
+
+    res.status(200).json({
+      deleted: result.deletedCount === 1,
+    });
   } catch (error) {
     next(error);
   }
