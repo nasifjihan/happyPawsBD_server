@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "status": "published",
+    "category": "preventive-care",
+    "title": "Pet Vaccinations: A Practical Guide for Bangladeshi Pet Families",
+    "excerpt": "Vaccines protect pets from preventable diseases. This guide explains what to ask your vet, how to build a schedule, and what to expect after vaccination.",
+    "content": "Vaccinations are one of the most effective ways to protect pets from serious illness.\n\nWhat to discuss with your vet:\n- Your pet’s age and past vaccination records\n- Lifestyle (indoor/outdoor, travel, boarding, multi-pet homes)\n- Local risk factors (disease prevalence, stray animal exposure)\n\nTypical process:\n1) Health check\n2) Vaccine administration\n3) Observation for a short period\n4) Follow-up schedule planning\n\nAftercare:\n- Mild tiredness or decreased appetite can happen for a day\n- Watch for swelling, vomiting, severe lethargy, or breathing difficulty and contact your vet immediately\n\nIf you don’t have records, your vet can help plan a safe restart schedule.\n\nThis content is educational and not a substitute for professional veterinary advice.",
+    "authorName": "Happy Paws BD Vet Team",
+    "coverImageUrl": "",
+    "coverImageAlt": "A veterinarian preparing a vaccine for a pet",
+    "tags": ["vaccination", "prevention", "vet-care"],
+    "featured": true,
+    "publishedAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "status": "published",
+    "category": "nutrition",
+    "title": "Healthy Pet Diet Basics: What to Feed and What to Avoid",
+    "excerpt": "A balanced diet supports energy, skin and coat health, digestion, and long-term wellbeing. Learn the basics of choosing safe food for dogs and cats.",
+    "content": "A healthy diet depends on species, age, activity level, and medical history.\n\nCore principles:\n- Choose complete and balanced food for the correct life stage\n- Measure portions to prevent obesity\n- Provide fresh clean water at all times\n\nCommon foods to avoid:\n- Chocolate, grapes/raisins, onions/garlic\n- Excess salty foods\n- Cooked bones (splinter risk)\n\nIf your pet has allergies, sensitive digestion, or chronic disease, consult a vet before changing diet.\n\nThis content is educational and not a substitute for professional veterinary advice.",
+    "authorName": "Happy Paws BD Vet Team",
+    "coverImageUrl": "",
+    "coverImageAlt": "A bowl of balanced pet food",
+    "tags": ["nutrition", "diet", "healthy-weight"],
+    "featured": false,
+    "publishedAt": "2026-07-10T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "status": "published",
+    "category": "seasonal-care",
+    "title": "Hot Weather Pet Care: How to Keep Your Pet Hydrated and Safe",
+    "excerpt": "Heat stress can be dangerous. Here’s how to reduce risk, encourage hydration, and spot early warning signs in hot Bangladeshi weather.",
+    "content": "In hot weather, pets can overheat quickly.\n\nHydration tips:\n- Keep water bowls in multiple rooms\n- Refresh water frequently\n- Offer ice cubes (if your pet tolerates them)\n\nSafety tips:\n- Avoid midday walks; choose early morning or evening\n- Provide shade and ventilation\n- Never leave pets in parked vehicles\n\nWarning signs of heat stress:\n- Heavy panting, drooling\n- Weakness, vomiting\n- Bright red gums or collapse\n\nIf you suspect heat stress, move the pet to a cool area and contact a vet immediately.\n\nThis content is educational and not a substitute for professional veterinary advice.",
+    "authorName": "Happy Paws BD Vet Team",
+    "coverImageUrl": "",
+    "coverImageAlt": "A pet drinking water on a hot day",
+    "tags": ["summer", "hydration", "heat-safety"],
+    "featured": false,
+    "publishedAt": "2026-07-18T00:00:00.000Z"
+  }
+]

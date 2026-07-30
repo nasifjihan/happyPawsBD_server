@@ -7,8 +7,11 @@ import { ensureStartupConfig } from "../config/env.js";
 import {
   AdoptableAnimals,
   BoardingPrograms,
+  BlogPosts,
   CommunityStories,
   GroomingPrograms,
+  PetInfoAnimals,
+  PetInfoBreeds,
   SiteSettings,
   TrainingPrograms,
   VetProviders,
@@ -189,6 +192,61 @@ const seedContent = async () => {
     "id"
   );
 
+  const blogPosts = await readJson("blogPosts.json");
+  const blogPostsResult = await upsertMany(
+    BlogPosts,
+    blogPosts.map((entry) => ({
+      ...entry,
+      coverImageUrl: normalizeMediaUrl(entry?.coverImageUrl),
+      externalUrl: normalizeMediaUrl(entry?.externalUrl),
+    })),
+    "id"
+  );
+
+  const petInfoPath = path.resolve(
+    currentDirectory,
+    "../../happyPawsBD_client/src/data/petInfoLibrary.json"
+  );
+  const petInfoLibrary = await readJsonAbsolute(petInfoPath);
+  const petInfoAnimals = Array.isArray(petInfoLibrary)
+    ? petInfoLibrary.map((group) => ({
+        type: String(group?.type || "").trim(),
+        summary: String(group?.summary || "").trim(),
+        idealFor: String(group?.idealFor || "").trim(),
+        commonNeeds: Array.isArray(group?.commonNeeds)
+          ? group.commonNeeds.map((entry) => String(entry).trim()).filter(Boolean)
+          : [],
+      }))
+    : [];
+  const petInfoBreeds = [];
+  let petInfoBreedId = 1;
+  if (Array.isArray(petInfoLibrary)) {
+    petInfoLibrary.forEach((group) => {
+      const groupType = String(group?.type || "").trim();
+      (group?.breeds || []).forEach((breed) => {
+        petInfoBreeds.push({
+          id: petInfoBreedId,
+          type: groupType,
+          name: String(breed?.name || "").trim(),
+          origin: String(breed?.origin || "").trim(),
+          size: String(breed?.size || "").trim(),
+          lifespan: String(breed?.lifespan || "").trim(),
+          temperament: Array.isArray(breed?.temperament)
+            ? breed.temperament.map((trait) => String(trait).trim()).filter(Boolean)
+            : [],
+          careLevel: String(breed?.careLevel || "").trim(),
+          exerciseNeeds: String(breed?.exerciseNeeds || "").trim(),
+          groomingNeeds: String(breed?.groomingNeeds || "").trim(),
+          goodFor: String(breed?.goodFor || "").trim(),
+          highlights: String(breed?.highlights || "").trim(),
+        });
+        petInfoBreedId += 1;
+      });
+    });
+  }
+  const petInfoAnimalsResult = await upsertMany(PetInfoAnimals, petInfoAnimals, "type");
+  const petInfoBreedsResult = await upsertMany(PetInfoBreeds, petInfoBreeds, "id");
+
   const rawSiteSettings = await readJson("siteSettings.json");
   const siteSettings = {
     ...rawSiteSettings,
@@ -208,6 +266,9 @@ const seedContent = async () => {
   console.log("Grooming programs:", groomingResult);
   console.log("Boarding programs:", boardingResult);
   console.log("Stories:", communityStoryResult);
+  console.log("Blog posts:", blogPostsResult);
+  console.log("Pet info animals:", petInfoAnimalsResult);
+  console.log("Pet info breeds:", petInfoBreedsResult);
   console.log("Site settings:", siteSettingsResult);
 };
 

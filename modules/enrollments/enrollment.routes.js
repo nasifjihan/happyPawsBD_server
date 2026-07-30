@@ -5,11 +5,14 @@ import {
   addGroomingEnrollment,
   addTrainingEnrollment,
 } from "./enrollment.controller.js";
+import { createRateLimiter } from "../../middleware/simple-rate-limit.js";
 
 const router = express.Router();
 
-router.post("/training/:id", addTrainingEnrollment);
-router.post("/grooming/:id", addGroomingEnrollment);
-router.post("/boarding/:id", addBoardingEnrollment);
+const enrollmentRateLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 15 });
+
+router.post("/training/:id", enrollmentRateLimiter, addTrainingEnrollment);
+router.post("/grooming/:id", enrollmentRateLimiter, addGroomingEnrollment);
+router.post("/boarding/:id", enrollmentRateLimiter, addBoardingEnrollment);
 
 export default router;

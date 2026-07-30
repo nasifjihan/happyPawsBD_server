@@ -7,6 +7,10 @@ import {
   OnlineConsultations,
   Reviews,
   CommunityStories,
+  BlogPosts,
+  PetInfoAnimals,
+  PetInfoBreeds,
+  RescueAlerts,
   PostFoundPet,
   PostLostPet,
   BoardingPrograms,
@@ -72,6 +76,16 @@ const createSearchRegex = (value) => new RegExp(escapeRegexSource(value), "i");
 
 const getNextCommunityStoryId = async () => {
   const latest = await CommunityStories.findOne({}, { id: 1 }).sort({ id: -1 }).lean();
+  return Number(latest?.id || 0) + 1;
+};
+
+const getNextBlogPostId = async () => {
+  const latest = await BlogPosts.findOne({}, { id: 1 }).sort({ id: -1 }).lean();
+  return Number(latest?.id || 0) + 1;
+};
+
+const getNextPetInfoBreedId = async () => {
+  const latest = await PetInfoBreeds.findOne({}, { id: 1 }).sort({ id: -1 }).lean();
   return Number(latest?.id || 0) + 1;
 };
 
@@ -623,6 +637,390 @@ export const deleteStoryAdmin = async (req, res, next) => {
     }
 
     const result = await CommunityStories.deleteOne({ id });
+
+    res.status(200).json({
+      deleted: result.deletedCount === 1,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const listBlogPostsAdmin = async (req, res, next) => {
+  try {
+    const allowedStatuses = ["draft", "published", "archived"];
+
+    const category = req.query?.category ? String(req.query.category).trim() : "";
+    const status = req.query?.status ? String(req.query.status).trim() : "";
+    const featured =
+      req.query?.featured === "true" ||
+      req.query?.featured === "1" ||
+      req.query?.featured === "yes";
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+    const filter = {};
+
+    if (category) {
+      filter.category = category;
+    }
+
+    if (status) {
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (featured) {
+      filter.featured = true;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { title: regex },
+        { excerpt: regex },
+        { content: regex },
+        { authorName: regex },
+        { category: regex },
+        { tags: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: BlogPosts,
+      page,
+      limit,
+      sort: { featured: -1, publishedAt: -1, createdAt: -1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getBlogPostAdmin = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid blog post id is required." });
+      return;
+    }
+
+    const post = await BlogPosts.findOne({ id }).lean();
+
+    if (!post) {
+      res.status(404).json({ message: "Blog post not found." });
+      return;
+    }
+
+    res.status(200).json(post);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const upsertBlogPostAdmin = async (req, res, next) => {
+  try {
+    const allowedStatuses = ["draft", "published", "archived"];
+
+    const paramIdRaw = req.params?.id;
+    if (paramIdRaw) {
+      const parsed = Number(paramIdRaw);
+      if (!Number.isFinite(parsed)) {
+        res.status(400).json({ message: "Valid blog post id is required." });
+        return;
+      }
+    }
+
+    const bodyIdRaw = req.body?.id;
+    const bodyId =
+      bodyIdRaw !== undefined && bodyIdRaw !== null && bodyIdRaw !== ""
+        ? Number(bodyIdRaw)
+        : null;
+    const paramId = paramIdRaw ? Number(paramIdRaw) : null;
+    const id = Number.isFinite(bodyId)
+      ? bodyId
+      : Number.isFinite(paramId)
+        ? paramId
+        : await getNextBlogPostId();
+
+    const status = req.body?.status ? String(req.body.status).trim() : "draft";
+    if (!allowedStatuses.includes(status)) {
+      res.status(400).json({ message: "Invalid status." });
+      return;
+    }
+
+    const publishedAtRaw = req.body?.publishedAt;
+    const publishedAt =
+      publishedAtRaw ? new Date(publishedAtRaw) : status === "published" ? new Date() : null;
+
+    if (publishedAt && Number.isNaN(publishedAt.getTime())) {
+      res.status(400).json({ message: "Invalid published date." });
+      return;
+    }
+
+    const nextPayload = {
+      ...req.body,
+      id,
+      status,
+      category: req.body?.category ? String(req.body.category).trim() : "",
+      title: req.body?.title ? String(req.body.title).trim() : "",
+      excerpt: req.body?.excerpt ? String(req.body.excerpt).trim() : "",
+      content: req.body?.content ? String(req.body.content).trim() : "",
+      authorName: req.body?.authorName ? String(req.body.authorName).trim() : "",
+      coverImageUrl: normalizeMediaUrl(req.body?.coverImageUrl),
+      coverImageAlt: req.body?.coverImageAlt ? String(req.body.coverImageAlt).trim() : "",
+      externalUrl: normalizeMediaUrl(req.body?.externalUrl),
+      tags: Array.isArray(req.body?.tags)
+        ? req.body.tags.map((tag) => String(tag).trim()).filter(Boolean)
+        : String(req.body?.tags || "")
+            .split(/[\n,]+/g)
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+      featured: Boolean(req.body?.featured),
+      publishedAt,
+    };
+
+    if (!nextPayload.title || !nextPayload.content) {
+      res.status(400).json({ message: "Title and content are required." });
+      return;
+    }
+
+    const updated = await BlogPosts.findOneAndUpdate(
+      { id },
+      { $set: nextPayload },
+      { upsert: true, new: true, runValidators: true }
+    ).lean();
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteBlogPostAdmin = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid blog post id is required." });
+      return;
+    }
+
+    const result = await BlogPosts.deleteOne({ id });
+
+    res.status(200).json({
+      deleted: result.deletedCount === 1,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const listPetInfoAnimalsAdmin = async (req, res, next) => {
+  try {
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+    const filter = {};
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [{ type: regex }, { summary: regex }, { idealFor: regex }, { commonNeeds: regex }];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: PetInfoAnimals,
+      page,
+      limit,
+      sort: { type: 1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const upsertPetInfoAnimalAdmin = async (req, res, next) => {
+  try {
+    const type = req.body?.type ? String(req.body.type).trim() : "";
+
+    if (!type) {
+      res.status(400).json({ message: "Animal type is required." });
+      return;
+    }
+
+    const summary = req.body?.summary ? String(req.body.summary).trim() : "";
+    const idealFor = req.body?.idealFor ? String(req.body.idealFor).trim() : "";
+
+    if (!summary || !idealFor) {
+      res.status(400).json({ message: "Summary and ideal for fields are required." });
+      return;
+    }
+
+    const commonNeeds = Array.isArray(req.body?.commonNeeds)
+      ? req.body.commonNeeds.map((entry) => String(entry).trim()).filter(Boolean)
+      : String(req.body?.commonNeeds || "")
+          .split(/[\n,]+/g)
+          .map((entry) => entry.trim())
+          .filter(Boolean);
+
+    const updated = await PetInfoAnimals.findOneAndUpdate(
+      { type },
+      { $set: { type, summary, idealFor, commonNeeds } },
+      { upsert: true, new: true, runValidators: true }
+    ).lean();
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deletePetInfoAnimalAdmin = async (req, res, next) => {
+  try {
+    const type = req.params?.type ? String(req.params.type).trim() : "";
+
+    if (!type) {
+      res.status(400).json({ message: "Animal type is required." });
+      return;
+    }
+
+    const [animalResult, breedResult] = await Promise.all([
+      PetInfoAnimals.deleteOne({ type }),
+      PetInfoBreeds.deleteMany({ type }),
+    ]);
+
+    res.status(200).json({
+      deleted: animalResult.deletedCount === 1,
+      deletedBreeds: breedResult.deletedCount || 0,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const listPetInfoBreedsAdmin = async (req, res, next) => {
+  try {
+    const type = req.query?.type ? String(req.query.type).trim() : "";
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+    const filter = {};
+
+    if (type) {
+      filter.type = type;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { type: regex },
+        { name: regex },
+        { origin: regex },
+        { size: regex },
+        { lifespan: regex },
+        { temperament: regex },
+        { careLevel: regex },
+        { exerciseNeeds: regex },
+        { groomingNeeds: regex },
+        { goodFor: regex },
+        { highlights: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: PetInfoBreeds,
+      page,
+      limit,
+      sort: { type: 1, name: 1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const upsertPetInfoBreedAdmin = async (req, res, next) => {
+  try {
+    const paramIdRaw = req.params?.id;
+    if (paramIdRaw) {
+      const parsed = Number(paramIdRaw);
+      if (!Number.isFinite(parsed)) {
+        res.status(400).json({ message: "Valid breed id is required." });
+        return;
+      }
+    }
+
+    const bodyIdRaw = req.body?.id;
+    const bodyId =
+      bodyIdRaw !== undefined && bodyIdRaw !== null && bodyIdRaw !== ""
+        ? Number(bodyIdRaw)
+        : null;
+    const paramId = paramIdRaw ? Number(paramIdRaw) : null;
+    const id = Number.isFinite(bodyId)
+      ? bodyId
+      : Number.isFinite(paramId)
+        ? paramId
+        : await getNextPetInfoBreedId();
+
+    const type = req.body?.type ? String(req.body.type).trim() : "";
+    const name = req.body?.name ? String(req.body.name).trim() : "";
+
+    if (!type || !name) {
+      res.status(400).json({ message: "Animal type and breed name are required." });
+      return;
+    }
+
+    const temperament = Array.isArray(req.body?.temperament)
+      ? req.body.temperament.map((entry) => String(entry).trim()).filter(Boolean)
+      : String(req.body?.temperament || "")
+          .split(/[\n,]+/g)
+          .map((entry) => entry.trim())
+          .filter(Boolean);
+
+    const nextPayload = {
+      ...req.body,
+      id,
+      type,
+      name,
+      origin: req.body?.origin ? String(req.body.origin).trim() : "",
+      size: req.body?.size ? String(req.body.size).trim() : "",
+      lifespan: req.body?.lifespan ? String(req.body.lifespan).trim() : "",
+      temperament,
+      careLevel: req.body?.careLevel ? String(req.body.careLevel).trim() : "",
+      exerciseNeeds: req.body?.exerciseNeeds ? String(req.body.exerciseNeeds).trim() : "",
+      groomingNeeds: req.body?.groomingNeeds ? String(req.body.groomingNeeds).trim() : "",
+      goodFor: req.body?.goodFor ? String(req.body.goodFor).trim() : "",
+      highlights: req.body?.highlights ? String(req.body.highlights).trim() : "",
+    };
+
+    const updated = await PetInfoBreeds.findOneAndUpdate(
+      { id },
+      { $set: nextPayload },
+      { upsert: true, new: true, runValidators: true }
+    ).lean();
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deletePetInfoBreedAdmin = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ message: "Valid breed id is required." });
+      return;
+    }
+
+    const result = await PetInfoBreeds.deleteOne({ id });
 
     res.status(200).json({
       deleted: result.deletedCount === 1,
@@ -1372,6 +1770,106 @@ export const updateLostFoundAdmin = async (req, res, next) => {
 
     if (!updated) {
       res.status(404).json({ message: "Report not found." });
+      return;
+    }
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const listRescueAlertsAdmin = async (req, res, next) => {
+  try {
+    const allowedStatuses = ["new", "reviewing", "dispatched", "resolved", "archived"];
+    const allowedUrgencies = ["low", "medium", "high", "critical"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.status) {
+      const status = String(req.query.status);
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (req.query?.urgency) {
+      const urgency = String(req.query.urgency);
+      if (!allowedUrgencies.includes(urgency)) {
+        res.status(400).json({ message: "Invalid urgency." });
+        return;
+      }
+      filter.urgency = urgency;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { reporterName: regex },
+        { contactPhone: regex },
+        { contactEmail: regex },
+        { animalType: regex },
+        { location: regex },
+        { landmark: regex },
+        { description: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: RescueAlerts,
+      page,
+      limit,
+      sort: { createdAt: -1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getRescueAlertAdmin = async (req, res, next) => {
+  try {
+    const alert = await RescueAlerts.findById(req.params.id).lean();
+
+    if (!alert) {
+      res.status(404).json({ message: "Rescue alert not found." });
+      return;
+    }
+
+    res.status(200).json(alert);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateRescueAlertAdmin = async (req, res, next) => {
+  try {
+    const allowedStatuses = ["new", "reviewing", "dispatched", "resolved", "archived"];
+    const status = String(req.body?.status || "");
+
+    if (!allowedStatuses.includes(status)) {
+      res.status(400).json({ message: "Invalid status." });
+      return;
+    }
+
+    const updates = {
+      status,
+    };
+
+    if ("adminNotes" in req.body) {
+      updates.adminNotes = String(req.body.adminNotes || "").trim();
+    }
+
+    const updated = await RescueAlerts.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+    }).lean();
+
+    if (!updated) {
+      res.status(404).json({ message: "Rescue alert not found." });
       return;
     }
 

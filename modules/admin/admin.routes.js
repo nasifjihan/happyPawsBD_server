@@ -14,6 +14,8 @@ import {
   getProgramAdmin,
   getReviewAdmin,
   getStoryAdmin,
+  getBlogPostAdmin,
+  getRescueAlertAdmin,
   getVetProviderAdmin,
   getVolunteerApplicationAdmin,
   listAdoptionApplicationsAdmin,
@@ -26,9 +28,14 @@ import {
   listReviewsAdmin,
   listShopItemsAdmin,
   listStoriesAdmin,
+  listBlogPostsAdmin,
+  listRescueAlertsAdmin,
   listVetProvidersAdmin,
   listVolunteerApplicationsAdmin,
   deleteStoryAdmin,
+  deleteBlogPostAdmin,
+  deletePetInfoAnimalAdmin,
+  deletePetInfoBreedAdmin,
   updateAdoptionApplicationAdmin,
   updateAdminPassword,
   updateSiteSettingsAdmin,
@@ -37,12 +44,18 @@ import {
   updateOnlineConsultationAdmin,
   updateOrderAdmin,
   updateReviewAdmin,
+  updateRescueAlertAdmin,
   upsertProgramAdmin,
   upsertStoryAdmin,
+  upsertBlogPostAdmin,
+  upsertPetInfoAnimalAdmin,
+  upsertPetInfoBreedAdmin,
   upsertVetProviderAdmin,
   updateVolunteerApplicationAdmin,
   upsertAdoptableAnimalAdmin,
   upsertShopItemAdmin,
+  listPetInfoAnimalsAdmin,
+  listPetInfoBreedsAdmin,
 } from "./admin.controller.js";
 import { requireAdmin } from "./admin.middleware.js";
 
@@ -76,6 +89,29 @@ router.get("/content/stories/:id", requireAdmin, getStoryAdmin);
 router.post("/content/stories", requireAdmin, upsertStoryAdmin);
 router.put("/content/stories/:id", requireAdmin, upsertStoryAdmin);
 router.delete("/content/stories/:id", requireAdmin, deleteStoryAdmin);
+
+router.get("/content/blog-posts", requireAdmin, listBlogPostsAdmin);
+router.get("/content/blog-posts/:id", requireAdmin, getBlogPostAdmin);
+router.post("/content/blog-posts", requireAdmin, upsertBlogPostAdmin);
+router.put("/content/blog-posts/:id", requireAdmin, upsertBlogPostAdmin);
+router.delete("/content/blog-posts/:id", requireAdmin, deleteBlogPostAdmin);
+
+router.get("/content/pet-info/animals", requireAdmin, listPetInfoAnimalsAdmin);
+router.post("/content/pet-info/animals", requireAdmin, upsertPetInfoAnimalAdmin);
+router.delete(
+  "/content/pet-info/animals/:type",
+  requireAdmin,
+  deletePetInfoAnimalAdmin
+);
+
+router.get("/content/pet-info/breeds", requireAdmin, listPetInfoBreedsAdmin);
+router.post("/content/pet-info/breeds", requireAdmin, upsertPetInfoBreedAdmin);
+router.put("/content/pet-info/breeds/:id", requireAdmin, upsertPetInfoBreedAdmin);
+router.delete(
+  "/content/pet-info/breeds/:id",
+  requireAdmin,
+  deletePetInfoBreedAdmin
+);
 
 router.get("/adoption/animals", requireAdmin, listAdoptableAnimalsAdmin);
 router.post("/adoption/animals", requireAdmin, upsertAdoptableAnimalAdmin);
@@ -147,6 +183,10 @@ router.put(
   requireAdmin,
   updateLostFoundAdmin
 );
+
+router.get("/requests/rescue-alerts", requireAdmin, listRescueAlertsAdmin);
+router.get("/requests/rescue-alerts/:id", requireAdmin, getRescueAlertAdmin);
+router.put("/requests/rescue-alerts/:id", requireAdmin, updateRescueAlertAdmin);
 
 router.get("/requests/reviews", requireAdmin, listReviewsAdmin);
 router.get("/requests/reviews/:id", requireAdmin, getReviewAdmin);

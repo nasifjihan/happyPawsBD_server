@@ -43,6 +43,14 @@ const lostPetsStorage = new CloudinaryStorage({
   },
 });
 
+const rescueAlertsStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "rescue_alerts",
+    allowed_formats: ["jpg", "png", "jpeg"],
+  },
+});
+
 // Create upload handlers for each folder
 const uploadFoundPets = multer({
   storage: foundPetsStorage,
@@ -54,5 +62,10 @@ const uploadLostPets = multer({
   fileFilter: imageFileFilter,
   limits: { fileSize: maxUploadSizeInBytes },
 });
+const uploadRescueAlerts = multer({
+  storage: rescueAlertsStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: maxUploadSizeInBytes },
+});
 
-export { uploadFoundPets, uploadLostPets };
+export { uploadFoundPets, uploadLostPets, uploadRescueAlerts };

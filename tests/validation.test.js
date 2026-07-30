@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { validateLostPetPayload } from "../modules/lost-found/lost-found.validation.js";
 import { validateOrderPayload } from "../modules/orders/order.validation.js";
 import { validatePaymentPayload } from "../modules/payments/payment.validation.js";
+import { validateRescueAlertPayload } from "../modules/rescue-alerts/rescue-alert.validation.js";
 
 test("validateLostPetPayload trims strings and normalizes email", () => {
   const result = validateLostPetPayload({
@@ -82,4 +83,25 @@ test("validatePaymentPayload rejects unsupported payment methods", () => {
       }),
     /Payment method must be one of/
   );
+});
+
+test("validateRescueAlertPayload requires core fields and normalizes values", () => {
+  const result = validateRescueAlertPayload({
+    reporterName: "  Rahim  ",
+    contactPhone: " 01700000000 ",
+    contactEmail: " TEST@EXAMPLE.COM ",
+    animalType: " Cat ",
+    location: " Mirpur ",
+    landmark: "  Gate 1 ",
+    urgency: "high",
+    description: " Injured leg, needs help ",
+    photo: "https://example.com/photo.jpg",
+  });
+
+  assert.equal(result.reporterName, "Rahim");
+  assert.equal(result.contactPhone, "01700000000");
+  assert.equal(result.contactEmail, "TEST@EXAMPLE.COM");
+  assert.equal(result.animalType, "Cat");
+  assert.equal(result.location, "Mirpur");
+  assert.equal(result.urgency, "high");
 });

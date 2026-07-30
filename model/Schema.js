@@ -293,6 +293,137 @@ const communityStorySchema = mongoose.Schema(
 );
 communityStorySchema.index({ category: 1, status: 1, createdAt: -1 });
 
+const blogPostSchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    status: {
+      type: String,
+      trim: true,
+      enum: ["draft", "published", "archived"],
+      default: "draft",
+      index: true,
+    },
+    category: optionalTrimmedString,
+    title: requiredTrimmedString,
+    excerpt: optionalTrimmedString,
+    content: requiredTrimmedString,
+    authorName: optionalTrimmedString,
+    coverImageUrl: optionalTrimmedString,
+    coverImageAlt: optionalTrimmedString,
+    externalUrl: optionalTrimmedString,
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    featured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    publishedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+  },
+  schemaOptions
+);
+blogPostSchema.index({ status: 1, featured: -1, publishedAt: -1, createdAt: -1 });
+
+const petInfoAnimalSchema = mongoose.Schema(
+  {
+    type: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+      index: true,
+    },
+    summary: requiredTrimmedString,
+    idealFor: requiredTrimmedString,
+    commonNeeds: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+  },
+  schemaOptions
+);
+
+const petInfoBreedSchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    type: requiredTrimmedString,
+    name: requiredTrimmedString,
+    origin: optionalTrimmedString,
+    size: optionalTrimmedString,
+    lifespan: optionalTrimmedString,
+    temperament: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    careLevel: optionalTrimmedString,
+    exerciseNeeds: optionalTrimmedString,
+    groomingNeeds: optionalTrimmedString,
+    goodFor: optionalTrimmedString,
+    highlights: optionalTrimmedString,
+  },
+  schemaOptions
+);
+petInfoBreedSchema.index({ type: 1, name: 1 });
+petInfoBreedSchema.index({ type: 1, createdAt: -1 });
+
+const rescueAlertSchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewing", "dispatched", "resolved", "archived"],
+      default: "new",
+      index: true,
+    },
+    reporterName: requiredTrimmedString,
+    contactPhone: requiredTrimmedString,
+    contactEmail: optionalEmailField,
+    animalType: requiredTrimmedString,
+    location: requiredTrimmedString,
+    landmark: optionalTrimmedString,
+    urgency: {
+      type: String,
+      trim: true,
+      enum: ["low", "medium", "high", "critical"],
+      default: "medium",
+      index: true,
+    },
+    description: requiredTrimmedString,
+    photo: optionalTrimmedString,
+    adminNotes: optionalTrimmedString,
+  },
+  schemaOptions
+);
+rescueAlertSchema.index({ status: 1, urgency: -1, createdAt: -1 });
+
 const OrderSchema = mongoose.Schema(
   {
     deliveryInfo: {
@@ -529,6 +660,10 @@ export const OnlineConsultations = mongoose.model(
 );
 export const Reviews = mongoose.model("SiteReview", reviewSchema);
 export const CommunityStories = mongoose.model("CommunityStory", communityStorySchema);
+export const BlogPosts = mongoose.model("BlogPost", blogPostSchema);
+export const PetInfoAnimals = mongoose.model("PetInfoAnimal", petInfoAnimalSchema);
+export const PetInfoBreeds = mongoose.model("PetInfoBreed", petInfoBreedSchema);
+export const RescueAlerts = mongoose.model("RescueAlert", rescueAlertSchema);
 export const Orders = mongoose.model("Order", OrderSchema);
 export const AdoptableAnimals = mongoose.model(
   "AdoptableAnimal",
