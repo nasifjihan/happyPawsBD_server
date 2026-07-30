@@ -9,6 +9,8 @@ import {
   deleteVetProviderAdmin,
   getSiteSettingsAdmin,
   getAdminSession,
+  getHouseCallRequestAdmin,
+  getInPersonConsultationAdmin,
   getOnlineConsultationAdmin,
   getOrderAdmin,
   getProgramAdmin,
@@ -22,6 +24,8 @@ import {
   listAdoptableAnimalsAdmin,
   listEnrollmentsAdmin,
   listLostFoundAdmin,
+  listHouseCallRequestsAdmin,
+  listInPersonConsultationsAdmin,
   listOnlineConsultationsAdmin,
   listOrdersAdmin,
   listProgramsAdmin,
@@ -40,6 +44,8 @@ import {
   updateAdminPassword,
   updateSiteSettingsAdmin,
   updateEnrollmentAdmin,
+  updateHouseCallRequestAdmin,
+  updateInPersonConsultationAdmin,
   updateLostFoundAdmin,
   updateOnlineConsultationAdmin,
   updateOrderAdmin,
@@ -168,6 +174,38 @@ router.put(
   "/requests/consultations/online/:id",
   requireAdmin,
   updateOnlineConsultationAdmin
+);
+
+router.get(
+  "/requests/consultations/in-person",
+  requireAdmin,
+  listInPersonConsultationsAdmin
+);
+router.get(
+  "/requests/consultations/in-person/:id",
+  requireAdmin,
+  getInPersonConsultationAdmin
+);
+router.put(
+  "/requests/consultations/in-person/:id",
+  requireAdmin,
+  updateInPersonConsultationAdmin
+);
+
+router.get(
+  "/requests/consultations/house-calls",
+  requireAdmin,
+  listHouseCallRequestsAdmin
+);
+router.get(
+  "/requests/consultations/house-calls/:id",
+  requireAdmin,
+  getHouseCallRequestAdmin
+);
+router.put(
+  "/requests/consultations/house-calls/:id",
+  requireAdmin,
+  updateHouseCallRequestAdmin
 );
 
 router.get("/requests/enrollments/:type", requireAdmin, listEnrollmentsAdmin);

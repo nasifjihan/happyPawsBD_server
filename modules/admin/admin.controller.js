@@ -4,6 +4,8 @@ import {
   BoardingEnrollment,
   GroomingEnrollment,
   Orders,
+  InPersonConsultations,
+  HouseCallRequests,
   OnlineConsultations,
   Reviews,
   CommunityStories,
@@ -1585,6 +1587,204 @@ export const updateOnlineConsultationAdmin = async (req, res, next) => {
 
     if (!updated) {
       res.status(404).json({ message: "Online consultation not found." });
+      return;
+    }
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const listInPersonConsultationsAdmin = async (req, res, next) => {
+  try {
+    const allowedStatuses = ["new", "reviewed", "scheduled", "completed", "cancelled"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.status) {
+      const status = String(req.query.status);
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { fullName: regex },
+        { contactEmail: regex },
+        { contactPhone: regex },
+        { petType: regex },
+        { petName: regex },
+        { city: regex },
+        { address: regex },
+        { preferredDate: regex },
+        { preferredTime: regex },
+        { concern: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: InPersonConsultations,
+      page,
+      limit,
+      sort: { createdAt: -1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getInPersonConsultationAdmin = async (req, res, next) => {
+  try {
+    const consultation = await InPersonConsultations.findById(req.params.id).lean();
+
+    if (!consultation) {
+      res.status(404).json({ message: "In-person consultation not found." });
+      return;
+    }
+
+    res.status(200).json(consultation);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateInPersonConsultationAdmin = async (req, res, next) => {
+  try {
+    const status = String(req.body?.status || "");
+    const allowedStatuses = ["new", "reviewed", "scheduled", "completed", "cancelled"];
+
+    if (!allowedStatuses.includes(status)) {
+      res.status(400).json({ message: "Invalid status." });
+      return;
+    }
+
+    const updates = {
+      status,
+    };
+
+    if ("adminNotes" in req.body) {
+      updates.adminNotes = String(req.body.adminNotes || "").trim();
+    }
+
+    const updated = await InPersonConsultations.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true }
+    ).lean();
+
+    if (!updated) {
+      res.status(404).json({ message: "In-person consultation not found." });
+      return;
+    }
+
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const listHouseCallRequestsAdmin = async (req, res, next) => {
+  try {
+    const allowedStatuses = ["new", "reviewed", "dispatched", "completed", "cancelled"];
+    const allowedUrgencies = ["low", "medium", "high"];
+    const filter = {};
+    const q = req.query?.q ? String(req.query.q).trim() : "";
+
+    if (req.query?.status) {
+      const status = String(req.query.status);
+      if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ message: "Invalid status." });
+        return;
+      }
+      filter.status = status;
+    }
+
+    if (req.query?.urgency) {
+      const urgency = String(req.query.urgency);
+      if (!allowedUrgencies.includes(urgency)) {
+        res.status(400).json({ message: "Invalid urgency." });
+        return;
+      }
+      filter.urgency = urgency;
+    }
+
+    if (q) {
+      const regex = createSearchRegex(q);
+      filter.$or = [
+        { fullName: regex },
+        { contactEmail: regex },
+        { contactPhone: regex },
+        { petType: regex },
+        { petName: regex },
+        { city: regex },
+        { address: regex },
+        { preferredDate: regex },
+        { preferredTime: regex },
+        { concern: regex },
+      ];
+    }
+
+    const { page, limit } = getPagination(req.query);
+    const result = await createPaginatedResult({
+      model: HouseCallRequests,
+      page,
+      limit,
+      sort: { createdAt: -1 },
+      filter,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getHouseCallRequestAdmin = async (req, res, next) => {
+  try {
+    const request = await HouseCallRequests.findById(req.params.id).lean();
+
+    if (!request) {
+      res.status(404).json({ message: "House call request not found." });
+      return;
+    }
+
+    res.status(200).json(request);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateHouseCallRequestAdmin = async (req, res, next) => {
+  try {
+    const status = String(req.body?.status || "");
+    const allowedStatuses = ["new", "reviewed", "dispatched", "completed", "cancelled"];
+
+    if (!allowedStatuses.includes(status)) {
+      res.status(400).json({ message: "Invalid status." });
+      return;
+    }
+
+    const updates = {
+      status,
+    };
+
+    if ("adminNotes" in req.body) {
+      updates.adminNotes = String(req.body.adminNotes || "").trim();
+    }
+
+    const updated = await HouseCallRequests.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+    }).lean();
+
+    if (!updated) {
+      res.status(404).json({ message: "House call request not found." });
       return;
     }
 

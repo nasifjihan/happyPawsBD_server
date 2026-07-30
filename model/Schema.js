@@ -226,6 +226,65 @@ const onlineConsultationSchema = mongoose.Schema(
 );
 onlineConsultationSchema.index({ status: 1, createdAt: -1 });
 
+const inPersonConsultationSchema = mongoose.Schema(
+  {
+    fullName: requiredTrimmedString,
+    contactEmail: optionalEmailField,
+    contactPhone: requiredTrimmedString,
+    petType: requiredTrimmedString,
+    petName: optionalTrimmedString,
+    petAge: optionalTrimmedString,
+    city: requiredTrimmedString,
+    address: requiredTrimmedString,
+    preferredDate: optionalTrimmedString,
+    preferredTime: optionalTrimmedString,
+    concern: requiredTrimmedString,
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "scheduled", "completed", "cancelled"],
+      default: "new",
+      index: true,
+    },
+    adminNotes: optionalTrimmedString,
+  },
+  schemaOptions
+);
+inPersonConsultationSchema.index({ status: 1, createdAt: -1 });
+
+const houseCallSchema = mongoose.Schema(
+  {
+    fullName: requiredTrimmedString,
+    contactEmail: optionalEmailField,
+    contactPhone: requiredTrimmedString,
+    petType: requiredTrimmedString,
+    petName: optionalTrimmedString,
+    petAge: optionalTrimmedString,
+    city: requiredTrimmedString,
+    address: requiredTrimmedString,
+    preferredDate: optionalTrimmedString,
+    preferredTime: optionalTrimmedString,
+    urgency: {
+      type: String,
+      trim: true,
+      enum: ["low", "medium", "high"],
+      default: "medium",
+      index: true,
+    },
+    concern: requiredTrimmedString,
+    status: {
+      type: String,
+      trim: true,
+      enum: ["new", "reviewed", "dispatched", "completed", "cancelled"],
+      default: "new",
+      index: true,
+    },
+    adminNotes: optionalTrimmedString,
+  },
+  schemaOptions
+);
+houseCallSchema.index({ status: 1, urgency: -1, createdAt: -1 });
+
 const reviewSchema = mongoose.Schema(
   {
     fullName: requiredTrimmedString,
@@ -658,6 +717,11 @@ export const OnlineConsultations = mongoose.model(
   "OnlineConsultation",
   onlineConsultationSchema
 );
+export const InPersonConsultations = mongoose.model(
+  "InPersonConsultation",
+  inPersonConsultationSchema
+);
+export const HouseCallRequests = mongoose.model("HouseCallRequest", houseCallSchema);
 export const Reviews = mongoose.model("SiteReview", reviewSchema);
 export const CommunityStories = mongoose.model("CommunityStory", communityStorySchema);
 export const BlogPosts = mongoose.model("BlogPost", blogPostSchema);
