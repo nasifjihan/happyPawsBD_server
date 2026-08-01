@@ -598,6 +598,18 @@ const VetProviderSchema = mongoose.Schema(
   contentSchemaOptions
 );
 
+const VetAuthorSchema = mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      unique: true,
+      index: true,
+    },
+  },
+  contentSchemaOptions
+);
+
 const TrainingProgramSchema = mongoose.Schema(
   {
     id: {
@@ -735,6 +747,7 @@ export const AdoptableAnimals = mongoose.model(
 );
 export const ShopItems = mongoose.model("ShopItem", ShopItemSchema);
 export const VetProviders = mongoose.model("VetProvider", VetProviderSchema);
+export const VetAuthors = mongoose.model("VetAuthor", VetAuthorSchema);
 export const TrainingPrograms = mongoose.model(
   "TrainingProgram",
   TrainingProgramSchema

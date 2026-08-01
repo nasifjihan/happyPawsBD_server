@@ -15,6 +15,7 @@ import storyRoutes from "../../modules/stories/story.routes.js";
 import blogPostRoutes from "../../modules/blog-posts/blog-post.routes.js";
 import petInfoRoutes from "../../modules/pet-info/pet-info.routes.js";
 import siteSettingsRoutes from "../../modules/site-settings/site-settings.routes.js";
+import vetAuthorsRoutes from "../../modules/vet-authors/vet-authors.routes.js";
 import vetsRoutes from "../../modules/vets/vets.routes.js";
 import volunteerRoutes from "../../modules/volunteers/volunteer.routes.js";
 
@@ -34,6 +35,7 @@ router.use("/rescue-alerts", rescueAlertRoutes);
 router.use("/blog-posts", blogPostRoutes);
 router.use("/pet-info", petInfoRoutes);
 router.use("/site-settings", siteSettingsRoutes);
+router.use("/vet-authors", vetAuthorsRoutes);
 router.use("/vets", vetsRoutes);
 router.use("/volunteers", volunteerRoutes);
 router.use("/volunteers", volunteerRoutes);
