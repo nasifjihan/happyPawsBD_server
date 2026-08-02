@@ -1,7 +1,7 @@
 import express from "express";
 
 import { listReviews, submitReview } from "./review.controller.js";
-import { createRateLimiter } from "../../middleware/simple-rate-limit.js";
+import { createRateLimiter } from "../../middlewares/simple-rate-limit.js";
 
 const router = express.Router();
 

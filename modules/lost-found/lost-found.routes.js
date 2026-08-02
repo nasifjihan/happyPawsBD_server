@@ -7,7 +7,7 @@ import {
   getLostPets,
 } from "./lost-found.controller.js";
 import { uploadFoundPets, uploadLostPets } from "../../utils/cloudnary.js";
-import { createRateLimiter } from "../../middleware/simple-rate-limit.js";
+import { createRateLimiter } from "../../middlewares/simple-rate-limit.js";
 
 const router = express.Router();
 
@@ -16,11 +16,11 @@ const lostFoundRateLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 
 router
   .route("/lost-pets")
   .get(getLostPets)
-  .post(lostFoundRateLimiter, uploadLostPets.single("petPicture"), addLostPet);
+  .post(lostFoundRateLimiter, uploadLostPets, addLostPet);
 
 router
   .route("/found-pets")
   .get(getFoundPets)
-  .post(lostFoundRateLimiter, uploadFoundPets.single("petPicture"), addFoundPet);
+  .post(lostFoundRateLimiter, uploadFoundPets, addFoundPet);
 
 export default router;

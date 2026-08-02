@@ -1,45 +1,51 @@
 import http from "http";
+import mongoose from "mongoose";
 
 import app from "./app.js";
 import Connection from "./database/db.js";
 import { ensureStartupConfig, env } from "./config/env.js";
 import { ensureSeedAdminCredential } from "./modules/admin/admin.service.js";
 
-globalThis.__HPBD_DATABASE_READY__ = false;
-
-const startServer = async () => {
+export const startServer = async () => {
   ensureStartupConfig();
 
   await Connection();
-  globalThis.__HPBD_DATABASE_READY__ = true;
+  app.locals.databaseReady = true;
   await ensureSeedAdminCredential();
 
   const server = http.createServer(app);
 
-  server.listen(env.port, env.host, () => {
-    console.log(
-      `Happy Paws BD Server is running successfully on PORT ${env.port} & HOST ${env.host}`
-    );
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(env.port, env.host, () => resolve());
   });
 
-  const shutdown = (signal) => {
-    console.log(`${signal} received. Shutting down Happy Paws BD server...`);
-    server.close((serverError) => {
-      if (serverError) {
-        console.error("Error while closing the server:", serverError);
-        process.exit(1);
-      }
+  console.log(
+    `Happy Paws BD Server is running successfully on PORT ${env.port} & HOST ${env.host}`
+  );
 
-      process.exit(0);
+  let shuttingDown = false;
+
+  const shutdown = async (signal) => {
+    if (shuttingDown) {
+      return;
+    }
+
+    shuttingDown = true;
+    console.log(`${signal} received. Shutting down Happy Paws BD server...`);
+
+    await new Promise((resolve) => {
+      server.close(() => resolve());
     });
+
+    await mongoose.disconnect();
+    process.exit(0);
   };
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
+
+  return { server, shutdown };
 };
 
-startServer().catch((error) => {
-  globalThis.__HPBD_DATABASE_READY__ = false;
-  console.error("Failed to start Happy Paws BD server:", error.message);
-  process.exit(1);
-});
+export default startServer;

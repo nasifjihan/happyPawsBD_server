@@ -1,7 +1,5 @@
-import pkg from "cloudinary";
-const { v2: cloudinary } = pkg;
+import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -18,54 +16,76 @@ const imageFileFilter = (req, file, callback) => {
   return callback(null, true);
 };
 
-// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Create storage for the "found_pets" folder
-const foundPetsStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "found_pets",
-    allowed_formats: ["jpg", "png", "jpeg"],
-  },
+const uploadImageToCloudinary = async (file, folder) =>
+  new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(result);
+      },
+    );
+
+    uploadStream.end(file.buffer);
+  });
+
+const createCloudinarySingleUpload = ({ fieldName, folder }) => {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: imageFileFilter,
+    limits: { fileSize: maxUploadSizeInBytes },
+  }).single(fieldName);
+
+  return (req, res, next) => {
+    upload(req, res, async (error) => {
+      if (error) {
+        next(error);
+        return;
+      }
+
+      if (!req.file) {
+        next();
+        return;
+      }
+
+      try {
+        const result = await uploadImageToCloudinary(req.file, folder);
+        req.file.path = result?.secure_url ?? result?.url;
+        req.file.filename = result?.public_id;
+        next();
+      } catch (uploadError) {
+        next(uploadError);
+      }
+    });
+  };
+};
+
+const uploadFoundPets = createCloudinarySingleUpload({
+  fieldName: "petPicture",
+  folder: "found_pets",
 });
 
-// Create storage for the "lost_pets" folder
-const lostPetsStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "lost_pets",
-    allowed_formats: ["jpg", "png", "jpeg"],
-  },
+const uploadLostPets = createCloudinarySingleUpload({
+  fieldName: "petPicture",
+  folder: "lost_pets",
 });
 
-const rescueAlertsStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "rescue_alerts",
-    allowed_formats: ["jpg", "png", "jpeg"],
-  },
-});
-
-// Create upload handlers for each folder
-const uploadFoundPets = multer({
-  storage: foundPetsStorage,
-  fileFilter: imageFileFilter,
-  limits: { fileSize: maxUploadSizeInBytes },
-});
-const uploadLostPets = multer({
-  storage: lostPetsStorage,
-  fileFilter: imageFileFilter,
-  limits: { fileSize: maxUploadSizeInBytes },
-});
-const uploadRescueAlerts = multer({
-  storage: rescueAlertsStorage,
-  fileFilter: imageFileFilter,
-  limits: { fileSize: maxUploadSizeInBytes },
+const uploadRescueAlerts = createCloudinarySingleUpload({
+  fieldName: "photo",
+  folder: "rescue_alerts",
 });
 
 export { uploadFoundPets, uploadLostPets, uploadRescueAlerts };

@@ -1,6 +1,6 @@
 import express from "express";
 
-import apiV1Routes from "./routes/api-v1.js";
+import apiV1Routes from "./api-v1.js";
 
 const router = express.Router();
 

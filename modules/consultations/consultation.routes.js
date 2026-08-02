@@ -5,7 +5,7 @@ import {
   requestInPersonConsultation,
   requestOnlineConsultation,
 } from "./consultation.controller.js";
-import { createRateLimiter } from "../../middleware/simple-rate-limit.js";
+import { createRateLimiter } from "../../middlewares/simple-rate-limit.js";
 
 const router = express.Router();
 

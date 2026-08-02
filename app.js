@@ -2,13 +2,14 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 
-import Routes from "./server/route.js";
+import Routes from "./routes/route.js";
 import { corsOptions } from "./config/cors.js";
 import { errorHandler } from "./middlewares/error-handler.js";
 import { handleStripeWebhook } from "./modules/payments/payment.controller.js";
 import { notFoundHandler } from "./middlewares/not-found.js";
 
 const app = express();
+app.locals.databaseReady = false;
 
 app.disable("x-powered-by");
 app.use(morgan("dev"));
@@ -36,10 +37,7 @@ app.get("/health", (req, res) => {
 });
 
 app.get("/ready", (req, res) => {
-  const databaseState =
-    typeof globalThis.__HPBD_DATABASE_READY__ === "boolean"
-      ? globalThis.__HPBD_DATABASE_READY__
-      : false;
+  const databaseState = app.locals.databaseReady === true;
 
   res.status(databaseState ? 200 : 503).json({
     status: databaseState ? "ready" : "not_ready",
