@@ -10,6 +10,17 @@ const toNumber = (value, fallbackValue) => {
   return Number.isFinite(parsedValue) ? parsedValue : fallbackValue;
 };
 
+const toList = (value) => {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
 const buildMongoUri = () => {
   if (process.env.MONGODB_URI) {
     return process.env.MONGODB_URI;
@@ -27,6 +38,7 @@ export const env = {
   port: toNumber(process.env.PORT, DEFAULT_PORT),
   host: process.env.HOST || DEFAULT_HOST,
   mongoUri: buildMongoUri(),
+  dnsServers: toList(process.env.DNS_SERVERS),
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
   adminTokenSecret: process.env.ADMIN_TOKEN_SECRET || "",
   adminSeedUsername: process.env.ADMIN_USERNAME || "",
