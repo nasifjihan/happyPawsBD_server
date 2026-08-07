@@ -405,6 +405,8 @@ const petInfoAnimalSchema = mongoose.Schema(
       unique: true,
       index: true,
     },
+    imageUrl: optionalTrimmedString,
+    imageAlt: optionalTrimmedString,
     summary: requiredTrimmedString,
     idealFor: requiredTrimmedString,
     commonNeeds: [
@@ -427,6 +429,8 @@ const petInfoBreedSchema = mongoose.Schema(
     },
     type: requiredTrimmedString,
     name: requiredTrimmedString,
+    imageUrl: optionalTrimmedString,
+    imageAlt: optionalTrimmedString,
     origin: optionalTrimmedString,
     size: optionalTrimmedString,
     lifespan: optionalTrimmedString,

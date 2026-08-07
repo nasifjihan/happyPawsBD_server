@@ -64,6 +64,10 @@ import {
   listPetInfoBreedsAdmin,
 } from "./admin.controller.js";
 import { requireAdmin } from "./admin.middleware.js";
+import {
+  uploadPetInfoAnimals,
+  uploadPetInfoBreeds,
+} from "../../utils/cloudnary.js";
 
 const router = express.Router();
 
@@ -103,7 +107,12 @@ router.put("/content/blog-posts/:id", requireAdmin, upsertBlogPostAdmin);
 router.delete("/content/blog-posts/:id", requireAdmin, deleteBlogPostAdmin);
 
 router.get("/content/pet-info/animals", requireAdmin, listPetInfoAnimalsAdmin);
-router.post("/content/pet-info/animals", requireAdmin, upsertPetInfoAnimalAdmin);
+router.post(
+  "/content/pet-info/animals",
+  requireAdmin,
+  uploadPetInfoAnimals,
+  upsertPetInfoAnimalAdmin
+);
 router.delete(
   "/content/pet-info/animals/:type",
   requireAdmin,
@@ -111,8 +120,18 @@ router.delete(
 );
 
 router.get("/content/pet-info/breeds", requireAdmin, listPetInfoBreedsAdmin);
-router.post("/content/pet-info/breeds", requireAdmin, upsertPetInfoBreedAdmin);
-router.put("/content/pet-info/breeds/:id", requireAdmin, upsertPetInfoBreedAdmin);
+router.post(
+  "/content/pet-info/breeds",
+  requireAdmin,
+  uploadPetInfoBreeds,
+  upsertPetInfoBreedAdmin
+);
+router.put(
+  "/content/pet-info/breeds/:id",
+  requireAdmin,
+  uploadPetInfoBreeds,
+  upsertPetInfoBreedAdmin
+);
 router.delete(
   "/content/pet-info/breeds/:id",
   requireAdmin,

@@ -201,6 +201,8 @@ const seedFromExtra = async () => {
   const petInfoAnimals = Array.isArray(petInfoLibrary)
     ? petInfoLibrary.map((group) => ({
         type: String(group?.type || "").trim(),
+        imageUrl: normalizeMediaUrl(group?.imageUrl) || "",
+        imageAlt: String(group?.imageAlt || "").trim(),
         summary: String(group?.summary || "").trim(),
         idealFor: String(group?.idealFor || "").trim(),
         commonNeeds: Array.isArray(group?.commonNeeds)
@@ -209,15 +211,24 @@ const seedFromExtra = async () => {
       }))
     : [];
   const petInfoBreeds = [];
-  let petInfoBreedId = 1;
+  let petInfoBreedIdFallback = 1;
   if (Array.isArray(petInfoLibrary)) {
     petInfoLibrary.forEach((group) => {
       const groupType = String(group?.type || "").trim();
       (group?.breeds || []).forEach((breed) => {
+        const explicitId = Number(breed?.id);
+        const id = Number.isFinite(explicitId) && explicitId > 0
+          ? explicitId
+          : petInfoBreedIdFallback;
+        if (!explicitId || !Number.isFinite(explicitId) || explicitId <= 0) {
+          petInfoBreedIdFallback += 1;
+        }
         petInfoBreeds.push({
-          id: petInfoBreedId,
+          id,
           type: groupType,
           name: String(breed?.name || "").trim(),
+          imageUrl: normalizeMediaUrl(breed?.imageUrl) || "",
+          imageAlt: String(breed?.imageAlt || "").trim(),
           origin: String(breed?.origin || "").trim(),
           size: String(breed?.size || "").trim(),
           lifespan: String(breed?.lifespan || "").trim(),
@@ -230,7 +241,6 @@ const seedFromExtra = async () => {
           goodFor: String(breed?.goodFor || "").trim(),
           highlights: String(breed?.highlights || "").trim(),
         });
-        petInfoBreedId += 1;
       });
     });
   }

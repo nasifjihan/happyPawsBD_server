@@ -871,9 +871,45 @@ export const upsertPetInfoAnimalAdmin = async (req, res, next) => {
           .map((entry) => entry.trim())
           .filter(Boolean);
 
+    const removeImage =
+      req.body?.removeImage === "true" ||
+      req.body?.removeImage === true ||
+      req.body?.removeImage === 1 ||
+      req.body?.removeImage === "1";
+
+    const uploadedImageUrl = req.file?.path ? normalizeMediaUrl(req.file.path) : undefined;
+    const existing = await PetInfoAnimals.findOne({ type }).lean();
+    const bodyImageUrl = normalizeMediaUrl(req.body?.imageUrl);
+
+    let imageUrl;
+    if (uploadedImageUrl) {
+      imageUrl = uploadedImageUrl;
+    } else if (bodyImageUrl) {
+      imageUrl = bodyImageUrl;
+    } else if (removeImage) {
+      imageUrl = "";
+    } else {
+      imageUrl = existing?.imageUrl || "";
+    }
+
+    const imageAltRaw = req.body?.imageAlt;
+    const imageAlt =
+      imageAltRaw === undefined || imageAltRaw === null
+        ? existing?.imageAlt || ""
+        : String(imageAltRaw).trim();
+
     const updated = await PetInfoAnimals.findOneAndUpdate(
       { type },
-      { $set: { type, summary, idealFor, commonNeeds } },
+      {
+        $set: {
+          type,
+          summary,
+          idealFor,
+          commonNeeds,
+          imageUrl,
+          imageAlt,
+        },
+      },
       { upsert: true, new: true, runValidators: true }
     ).lean();
 
@@ -985,6 +1021,33 @@ export const upsertPetInfoBreedAdmin = async (req, res, next) => {
           .map((entry) => entry.trim())
           .filter(Boolean);
 
+    const removeImage =
+      req.body?.removeImage === "true" ||
+      req.body?.removeImage === true ||
+      req.body?.removeImage === 1 ||
+      req.body?.removeImage === "1";
+
+    const uploadedImageUrl = req.file?.path ? normalizeMediaUrl(req.file.path) : undefined;
+    const existing = await PetInfoBreeds.findOne({ id }).lean();
+    const bodyImageUrl = normalizeMediaUrl(req.body?.imageUrl);
+
+    let imageUrl;
+    if (uploadedImageUrl) {
+      imageUrl = uploadedImageUrl;
+    } else if (bodyImageUrl) {
+      imageUrl = bodyImageUrl;
+    } else if (removeImage) {
+      imageUrl = "";
+    } else {
+      imageUrl = existing?.imageUrl || "";
+    }
+
+    const imageAltRaw = req.body?.imageAlt;
+    const imageAlt =
+      imageAltRaw === undefined || imageAltRaw === null
+        ? existing?.imageAlt || ""
+        : String(imageAltRaw).trim();
+
     const nextPayload = {
       ...req.body,
       id,
@@ -999,6 +1062,8 @@ export const upsertPetInfoBreedAdmin = async (req, res, next) => {
       groomingNeeds: req.body?.groomingNeeds ? String(req.body.groomingNeeds).trim() : "",
       goodFor: req.body?.goodFor ? String(req.body.goodFor).trim() : "",
       highlights: req.body?.highlights ? String(req.body.highlights).trim() : "",
+      imageUrl,
+      imageAlt,
     };
 
     const updated = await PetInfoBreeds.findOneAndUpdate(

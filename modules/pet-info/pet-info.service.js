@@ -53,6 +53,8 @@ export const buildPetInfoLibrary = async ({ type, q } = {}) => {
         summary: animalMeta?.summary || "",
         idealFor: animalMeta?.idealFor || "",
         commonNeeds: animalMeta?.commonNeeds || [],
+        imageUrl: animalMeta?.imageUrl || "",
+        imageAlt: animalMeta?.imageAlt || "",
         breeds: [],
       });
     }

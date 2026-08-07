@@ -88,4 +88,20 @@ const uploadRescueAlerts = createCloudinarySingleUpload({
   folder: "rescue_alerts",
 });
 
-export { uploadFoundPets, uploadLostPets, uploadRescueAlerts };
+const uploadPetInfoAnimals = createCloudinarySingleUpload({
+  fieldName: "image",
+  folder: "pet_info/animals",
+});
+
+const uploadPetInfoBreeds = createCloudinarySingleUpload({
+  fieldName: "image",
+  folder: "pet_info/breeds",
+});
+
+export {
+  uploadFoundPets,
+  uploadLostPets,
+  uploadRescueAlerts,
+  uploadPetInfoAnimals,
+  uploadPetInfoBreeds,
+};
